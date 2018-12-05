@@ -187,7 +187,7 @@ func resourceArmContainerServiceCreate(d *schema.ResourceData, meta interface{})
 
 	log.Printf("[INFO] preparing arguments for Azure ARM Container Service creation.")
 
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	name := d.Get("name").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
 
@@ -221,25 +221,25 @@ func resourceArmContainerServiceCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	ctx := meta.(*ArmClient).StopContext
-	_, err := containerServiceClient.CreateOrUpdate(ctx, resGroup, name, parameters)
+	_, err := containerServiceClient.CreateOrUpdate(ctx, resourceGroup, name, parameters)
 	if err != nil {
 		return err
 	}
 
-	read, err := containerServiceClient.Get(ctx, resGroup, name)
+	read, err := containerServiceClient.Get(ctx, resourceGroup, name)
 	if err != nil {
 		return err
 	}
 
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read Container Service %s (resource group %s) ID", name, resGroup)
+		return fmt.Errorf("Cannot read Container Service %s (resource group %s) ID", name, resourceGroup)
 	}
 
 	log.Printf("[DEBUG] Waiting for Container Service (%s) to become available", d.Get("name"))
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"Updating", "Creating"},
 		Target:     []string{"Succeeded"},
-		Refresh:    containerServiceStateRefreshFunc(client, resGroup, name),
+		Refresh:    containerServiceStateRefreshFunc(client, resourceGroup, name),
 		Timeout:    30 * time.Minute,
 		MinTimeout: 15 * time.Second,
 	}
@@ -259,11 +259,11 @@ func resourceArmContainerServiceRead(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["containerServices"]
 
 	ctx := meta.(*ArmClient).StopContext
-	resp, err := containerServiceClient.Get(ctx, resGroup, name)
+	resp, err := containerServiceClient.Get(ctx, resourceGroup, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
@@ -274,7 +274,7 @@ func resourceArmContainerServiceRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.Set("name", resp.Name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	if location := resp.Location; location != nil {
 		d.Set("location", azureRMNormalizeLocation(*location))
 	}
@@ -313,11 +313,11 @@ func resourceArmContainerServiceDelete(d *schema.ResourceData, meta interface{})
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["containerServices"]
 
 	ctx := meta.(*ArmClient).StopContext
-	future, err := containerServiceClient.Delete(ctx, resGroup, name)
+	future, err := containerServiceClient.Delete(ctx, resourceGroup, name)
 
 	if err != nil {
 		return fmt.Errorf("Error issuing Azure ARM delete request of Container Service '%s': %s", name, err)

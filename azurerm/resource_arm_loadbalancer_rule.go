@@ -149,12 +149,12 @@ func resourceArmLoadBalancerRuleCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	loadBalancer.LoadBalancerPropertiesFormat.LoadBalancingRules = &lbRules
-	resGroup, loadBalancerName, err := resourceGroupAndLBNameFromId(d.Get("loadbalancer_id").(string))
+	resourceGroup, loadBalancerName, err := resourceGroupAndLBNameFromId(d.Get("loadbalancer_id").(string))
 	if err != nil {
 		return fmt.Errorf("Error Getting Load Balancer Name and Group:: %+v", err)
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, loadBalancerName, *loadBalancer)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, loadBalancerName, *loadBalancer)
 	if err != nil {
 		return fmt.Errorf("Error Creating/Updating LoadBalancer: %+v", err)
 	}
@@ -164,12 +164,12 @@ func resourceArmLoadBalancerRuleCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("Error waiting for completion for Load Balancer updates: %+v", err)
 	}
 
-	read, err := client.Get(ctx, resGroup, loadBalancerName, "")
+	read, err := client.Get(ctx, resourceGroup, loadBalancerName, "")
 	if err != nil {
 		return fmt.Errorf("Error Getting LoadBalancer: %+v", err)
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read Load Balancer %s (resource group %s) ID", loadBalancerName, resGroup)
+		return fmt.Errorf("Cannot read Load Balancer %s (resource group %s) ID", loadBalancerName, resourceGroup)
 	}
 
 	var ruleId string
@@ -189,7 +189,7 @@ func resourceArmLoadBalancerRuleCreate(d *schema.ResourceData, meta interface{})
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"Accepted", "Updating"},
 		Target:  []string{"Succeeded"},
-		Refresh: loadbalancerStateRefreshFunc(ctx, client, resGroup, loadBalancerName),
+		Refresh: loadbalancerStateRefreshFunc(ctx, client, resourceGroup, loadBalancerName),
 		Timeout: 10 * time.Minute,
 	}
 	if _, err := stateConf.WaitForState(); err != nil {
@@ -291,27 +291,27 @@ func resourceArmLoadBalancerRuleDelete(d *schema.ResourceData, meta interface{})
 	newLbRules := append(oldLbRules[:index], oldLbRules[index+1:]...)
 	loadBalancer.LoadBalancerPropertiesFormat.LoadBalancingRules = &newLbRules
 
-	resGroup, loadBalancerName, err := resourceGroupAndLBNameFromId(d.Get("loadbalancer_id").(string))
+	resourceGroup, loadBalancerName, err := resourceGroupAndLBNameFromId(d.Get("loadbalancer_id").(string))
 	if err != nil {
 		return fmt.Errorf("Error Getting Load Balancer Name and Group:: %+v", err)
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, loadBalancerName, *loadBalancer)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, loadBalancerName, *loadBalancer)
 	if err != nil {
-		return fmt.Errorf("Error Creating/Updating Load Balancer %q (Resource Group %q): %+v", loadBalancerName, resGroup, err)
+		return fmt.Errorf("Error Creating/Updating Load Balancer %q (Resource Group %q): %+v", loadBalancerName, resourceGroup, err)
 	}
 
 	err = future.WaitForCompletionRef(ctx, client.Client)
 	if err != nil {
-		return fmt.Errorf("Error waiting for completion of Load Balancer %q (Resource Group %q): %+v", loadBalancerName, resGroup, err)
+		return fmt.Errorf("Error waiting for completion of Load Balancer %q (Resource Group %q): %+v", loadBalancerName, resourceGroup, err)
 	}
 
-	read, err := client.Get(ctx, resGroup, loadBalancerName, "")
+	read, err := client.Get(ctx, resourceGroup, loadBalancerName, "")
 	if err != nil {
 		return fmt.Errorf("Error Getting LoadBalancer: %+v", err)
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read ID of Load Balancer %q (resource group %s)", loadBalancerName, resGroup)
+		return fmt.Errorf("Cannot read ID of Load Balancer %q (resource group %s)", loadBalancerName, resourceGroup)
 	}
 
 	return nil

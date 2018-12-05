@@ -68,7 +68,7 @@ func resourceArmKeyVaultAccessPolicyCreateOrDelete(d *schema.ResourceData, meta 
 	log.Printf("[INFO] Preparing arguments for Key Vault Access Policy: %s.", action)
 
 	vaultName := d.Get("vault_name").(string)
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 
 	tenantIdRaw := d.Get("tenant_id").(string)
 	tenantId, err := uuid.FromString(tenantIdRaw)
@@ -120,18 +120,18 @@ func resourceArmKeyVaultAccessPolicyCreateOrDelete(d *schema.ResourceData, meta 
 	azureRMLockByName(vaultName, keyVaultResourceName)
 	defer azureRMUnlockByName(vaultName, keyVaultResourceName)
 
-	_, err = client.UpdateAccessPolicy(ctx, resGroup, vaultName, action, parameters)
+	_, err = client.UpdateAccessPolicy(ctx, resourceGroup, vaultName, action, parameters)
 	if err != nil {
-		return fmt.Errorf("Error updating Access Policy (Object ID %q / Application ID %q) for Key Vault %q (Resource Group %q): %+v", objectId, applicationIdRaw, vaultName, resGroup, err)
+		return fmt.Errorf("Error updating Access Policy (Object ID %q / Application ID %q) for Key Vault %q (Resource Group %q): %+v", objectId, applicationIdRaw, vaultName, resourceGroup, err)
 	}
 
-	read, err := client.Get(ctx, resGroup, vaultName)
+	read, err := client.Get(ctx, resourceGroup, vaultName)
 	if err != nil {
-		return fmt.Errorf("Error retrieving Key Vault %q (Resource Group %q): %+v", vaultName, resGroup, err)
+		return fmt.Errorf("Error retrieving Key Vault %q (Resource Group %q): %+v", vaultName, resourceGroup, err)
 	}
 
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read KeyVault %q (Resource Group %q) ID", vaultName, resGroup)
+		return fmt.Errorf("Cannot read KeyVault %q (Resource Group %q) ID", vaultName, resourceGroup)
 	}
 
 	if d.IsNewResource() {
@@ -169,35 +169,35 @@ func resourceArmKeyVaultAccessPolicyRead(d *schema.ResourceData, meta interface{
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	vaultName := id.Path["vaults"]
 	objectId := id.Path["objectId"]
 	applicationId := id.Path["applicationId"]
 
-	resp, err := client.Get(ctx, resGroup, vaultName)
+	resp, err := client.Get(ctx, resourceGroup, vaultName)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
-			log.Printf("[ERROR] Key Vault %q (Resource Group %q) was not found - removing from state", vaultName, resGroup)
+			log.Printf("[ERROR] Key Vault %q (Resource Group %q) was not found - removing from state", vaultName, resourceGroup)
 			d.SetId("")
 			return nil
 		}
 
-		return fmt.Errorf("Error making Read request on Azure KeyVault %q (Resource Group %q): %+v", vaultName, resGroup, err)
+		return fmt.Errorf("Error making Read request on Azure KeyVault %q (Resource Group %q): %+v", vaultName, resourceGroup, err)
 	}
 
 	policy, err := findKeyVaultAccessPolicy(resp.Properties.AccessPolicies, objectId, applicationId)
 	if err != nil {
-		return fmt.Errorf("Error locating Access Policy (Object ID %q / Application ID %q) in Key Vault %q (Resource Group %q)", objectId, applicationId, vaultName, resGroup)
+		return fmt.Errorf("Error locating Access Policy (Object ID %q / Application ID %q) in Key Vault %q (Resource Group %q)", objectId, applicationId, vaultName, resourceGroup)
 	}
 
 	if policy == nil {
-		log.Printf("[ERROR] Access Policy (Object ID %q / Application ID %q) was not found in Key Vault %q (Resource Group %q) - removing from state", objectId, applicationId, vaultName, resGroup)
+		log.Printf("[ERROR] Access Policy (Object ID %q / Application ID %q) was not found in Key Vault %q (Resource Group %q) - removing from state", objectId, applicationId, vaultName, resourceGroup)
 		d.SetId("")
 		return nil
 	}
 
 	d.Set("vault_name", resp.Name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	d.Set("object_id", objectId)
 
 	if tid := policy.TenantID; tid != nil {

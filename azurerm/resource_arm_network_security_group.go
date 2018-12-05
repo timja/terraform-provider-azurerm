@@ -163,7 +163,7 @@ func resourceArmNetworkSecurityGroupCreate(d *schema.ResourceData, meta interfac
 
 	name := d.Get("name").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	tags := d.Get("tags").(map[string]interface{})
 
 	sgRules, sgErr := expandAzureRmSecurityRules(d)
@@ -183,22 +183,22 @@ func resourceArmNetworkSecurityGroupCreate(d *schema.ResourceData, meta interfac
 		Tags: expandTags(tags),
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, name, sg)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, name, sg)
 	if err != nil {
-		return fmt.Errorf("Error creating/updating NSG %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error creating/updating NSG %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	err = future.WaitForCompletionRef(ctx, client.Client)
 	if err != nil {
-		return fmt.Errorf("Error waiting for the completion of NSG %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error waiting for the completion of NSG %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
-	read, err := client.Get(ctx, resGroup, name, "")
+	read, err := client.Get(ctx, resourceGroup, name, "")
 	if err != nil {
 		return err
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read NSG %q (resource group %q) ID", name, resGroup)
+		return fmt.Errorf("Cannot read NSG %q (resource group %q) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -214,20 +214,20 @@ func resourceArmNetworkSecurityGroupRead(d *schema.ResourceData, meta interface{
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["networkSecurityGroups"]
 
-	resp, err := client.Get(ctx, resGroup, name, "")
+	resp, err := client.Get(ctx, resourceGroup, name, "")
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Error making Read request on Network Security Group %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error making Read request on Network Security Group %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	d.Set("name", resp.Name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	if location := resp.Location; location != nil {
 		d.Set("location", azureRMNormalizeLocation(*location))
 	}
@@ -252,17 +252,17 @@ func resourceArmNetworkSecurityGroupDelete(d *schema.ResourceData, meta interfac
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["networkSecurityGroups"]
 
-	future, err := client.Delete(ctx, resGroup, name)
+	future, err := client.Delete(ctx, resourceGroup, name)
 	if err != nil {
-		return fmt.Errorf("Error deleting Network Security Group %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error deleting Network Security Group %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	err = future.WaitForCompletionRef(ctx, client.Client)
 	if err != nil {
-		return fmt.Errorf("Error deleting Network Security Group %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error deleting Network Security Group %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	return err

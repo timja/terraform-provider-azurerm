@@ -54,7 +54,7 @@ func resourceArmSqlActiveDirectoryAdministratorCreateUpdate(d *schema.ResourceDa
 	ctx := meta.(*ArmClient).StopContext
 
 	serverName := d.Get("server_name").(string)
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	login := d.Get("login").(string)
 	objectId := uuid.FromStringOrNil(d.Get("object_id").(string))
 	tenantId := uuid.FromStringOrNil(d.Get("tenant_id").(string))
@@ -67,7 +67,7 @@ func resourceArmSqlActiveDirectoryAdministratorCreateUpdate(d *schema.ResourceDa
 		},
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, serverName, parameters)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, serverName, parameters)
 	if err != nil {
 		return err
 	}
@@ -77,7 +77,7 @@ func resourceArmSqlActiveDirectoryAdministratorCreateUpdate(d *schema.ResourceDa
 		return err
 	}
 
-	resp, err := client.Get(ctx, resGroup, serverName)
+	resp, err := client.Get(ctx, resourceGroup, serverName)
 	if err != nil {
 		return err
 	}

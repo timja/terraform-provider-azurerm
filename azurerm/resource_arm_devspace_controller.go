@@ -101,7 +101,7 @@ func resourceArmDevSpaceControllerCreate(d *schema.ResourceData, meta interface{
 
 	name := d.Get("name").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
-	resGroupName := d.Get("resource_group_name").(string)
+	resourceGroupName := d.Get("resource_group_name").(string)
 	tags := d.Get("tags").(map[string]interface{})
 
 	sku := expandDevSpaceControllerSku(d)
@@ -121,22 +121,22 @@ func resourceArmDevSpaceControllerCreate(d *schema.ResourceData, meta interface{
 		},
 	}
 
-	future, err := client.Create(ctx, resGroupName, name, controller)
+	future, err := client.Create(ctx, resourceGroupName, name, controller)
 	if err != nil {
-		return fmt.Errorf("Error creating DevSpace Controller %q (Resource Group %q): %+v", name, resGroupName, err)
+		return fmt.Errorf("Error creating DevSpace Controller %q (Resource Group %q): %+v", name, resourceGroupName, err)
 	}
 
 	if err = future.WaitForCompletionRef(ctx, client.Client); err != nil {
-		return fmt.Errorf("Error waiting for creation of DevSpace Controller %q (Resource Group %q): %+v", name, resGroupName, err)
+		return fmt.Errorf("Error waiting for creation of DevSpace Controller %q (Resource Group %q): %+v", name, resourceGroupName, err)
 	}
 
-	result, err := client.Get(ctx, resGroupName, name)
+	result, err := client.Get(ctx, resourceGroupName, name)
 	if err != nil {
-		return fmt.Errorf("Error retrieving DevSpace %q (Resource Group %q): %+v", name, resGroupName, err)
+		return fmt.Errorf("Error retrieving DevSpace %q (Resource Group %q): %+v", name, resourceGroupName, err)
 	}
 
 	if result.ID == nil {
-		return fmt.Errorf("Cannot read DevSpace Controller %q (Resource Group %q) ID", name, resGroupName)
+		return fmt.Errorf("Cannot read DevSpace Controller %q (Resource Group %q) ID", name, resourceGroupName)
 	}
 	d.SetId(*result.ID)
 
@@ -151,22 +151,22 @@ func resourceArmDevSpaceControllerRead(d *schema.ResourceData, meta interface{})
 	if err != nil {
 		return err
 	}
-	resGroupName := id.ResourceGroup
+	resourceGroupName := id.ResourceGroup
 	name := id.Path["controllers"]
 
-	result, err := client.Get(ctx, resGroupName, name)
+	result, err := client.Get(ctx, resourceGroupName, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(result.Response) {
-			log.Printf("[DEBUG] DevSpace Controller %q was not found in Resource Group %q - removing from state!", name, resGroupName)
+			log.Printf("[DEBUG] DevSpace Controller %q was not found in Resource Group %q - removing from state!", name, resourceGroupName)
 			d.SetId("")
 			return nil
 		}
 
-		return fmt.Errorf("Error making Read request on DevSpace Controller %q (Resource Group %q): %+v", name, resGroupName, err)
+		return fmt.Errorf("Error making Read request on DevSpace Controller %q (Resource Group %q): %+v", name, resourceGroupName, err)
 	}
 
 	d.Set("name", result.Name)
-	d.Set("resource_group_name", resGroupName)
+	d.Set("resource_group_name", resourceGroupName)
 	if location := result.Location; location != nil {
 		d.Set("location", azureRMNormalizeLocation(*location))
 	}
@@ -193,20 +193,20 @@ func resourceArmDevSpaceControllerUpdate(d *schema.ResourceData, meta interface{
 	log.Printf("[INFO] preparing arguments for DevSpace Controller updating")
 
 	name := d.Get("name").(string)
-	resGroupName := d.Get("resource_group_name").(string)
+	resourceGroupName := d.Get("resource_group_name").(string)
 	tags := d.Get("tags").(map[string]interface{})
 
 	params := devspaces.ControllerUpdateParameters{
 		Tags: expandTags(tags),
 	}
 
-	result, err := client.Update(ctx, resGroupName, name, params)
+	result, err := client.Update(ctx, resourceGroupName, name, params)
 	if err != nil {
-		return fmt.Errorf("Error updating DevSpace Controller %q (Resource Group %q): %+v", name, resGroupName, err)
+		return fmt.Errorf("Error updating DevSpace Controller %q (Resource Group %q): %+v", name, resourceGroupName, err)
 	}
 
 	if result.ID == nil {
-		return fmt.Errorf("Cannot read DevSpace Controller %q (Resource Group %q) ID", name, resGroupName)
+		return fmt.Errorf("Cannot read DevSpace Controller %q (Resource Group %q) ID", name, resourceGroupName)
 	}
 	d.SetId(*result.ID)
 
@@ -221,16 +221,16 @@ func resourceArmDevSpaceControllerDelete(d *schema.ResourceData, meta interface{
 	if err != nil {
 		return err
 	}
-	resGroupName := id.ResourceGroup
+	resourceGroupName := id.ResourceGroup
 	name := id.Path["controllers"]
 
-	future, err := client.Delete(ctx, resGroupName, name)
+	future, err := client.Delete(ctx, resourceGroupName, name)
 	if err != nil {
-		return fmt.Errorf("Error deleting DevSpace Controller %q (Resource Group %q): %+v", name, resGroupName, err)
+		return fmt.Errorf("Error deleting DevSpace Controller %q (Resource Group %q): %+v", name, resourceGroupName, err)
 	}
 
 	if err = future.WaitForCompletionRef(ctx, client.Client); err != nil {
-		return fmt.Errorf("Error waiting for the deletion of DevSpace Controller %q (Resource Group %q): %+v", name, resGroupName, err)
+		return fmt.Errorf("Error waiting for the deletion of DevSpace Controller %q (Resource Group %q): %+v", name, resourceGroupName, err)
 	}
 
 	return nil

@@ -149,7 +149,7 @@ func resourceArmAppServicePlanCreateUpdate(d *schema.ResourceData, meta interfac
 
 	log.Printf("[INFO] preparing arguments for AzureRM App Service Plan creation.")
 
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	name := d.Get("name").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
 	kind := d.Get("kind").(string)
@@ -180,21 +180,21 @@ func resourceArmAppServicePlanCreateUpdate(d *schema.ResourceData, meta interfac
 		appServicePlan.AppServicePlanProperties.Reserved = utils.Bool(v.(bool))
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, name, appServicePlan)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, name, appServicePlan)
 	if err != nil {
-		return fmt.Errorf("Error creating/updating App Service Plan %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error creating/updating App Service Plan %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	if err = future.WaitForCompletionRef(ctx, client.Client); err != nil {
-		return fmt.Errorf("Error waiting for the create/update of App Service Plan %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error waiting for the create/update of App Service Plan %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
-	read, err := client.Get(ctx, resGroup, name)
+	read, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
-		return fmt.Errorf("Error retrieving App Service Plan %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error retrieving App Service Plan %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read AzureRM App Service Plan %q (resource group %q) ID", name, resGroup)
+		return fmt.Errorf("Cannot read AzureRM App Service Plan %q (resource group %q) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)

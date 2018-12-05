@@ -55,7 +55,7 @@ func resourceArmDnsAaaaRecordCreateOrUpdate(d *schema.ResourceData, meta interfa
 	ctx := meta.(*ArmClient).StopContext
 
 	name := d.Get("name").(string)
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	zoneName := d.Get("zone_name").(string)
 	ttl := int64(d.Get("ttl").(int))
 	tags := d.Get("tags").(map[string]interface{})
@@ -76,13 +76,13 @@ func resourceArmDnsAaaaRecordCreateOrUpdate(d *schema.ResourceData, meta interfa
 
 	eTag := ""
 	ifNoneMatch := "" // set to empty to allow updates to records after creation
-	resp, err := client.CreateOrUpdate(ctx, resGroup, zoneName, name, dns.AAAA, parameters, eTag, ifNoneMatch)
+	resp, err := client.CreateOrUpdate(ctx, resourceGroup, zoneName, name, dns.AAAA, parameters, eTag, ifNoneMatch)
 	if err != nil {
 		return err
 	}
 
 	if resp.ID == nil {
-		return fmt.Errorf("Cannot read DNS AAAA Record %s (resource group %s) ID", name, resGroup)
+		return fmt.Errorf("Cannot read DNS AAAA Record %s (resource group %s) ID", name, resourceGroup)
 	}
 
 	d.SetId(*resp.ID)
@@ -99,11 +99,11 @@ func resourceArmDnsAaaaRecordRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["AAAA"]
 	zoneName := id.Path["dnszones"]
 
-	resp, err := dnsClient.Get(ctx, resGroup, zoneName, name, dns.AAAA)
+	resp, err := dnsClient.Get(ctx, resourceGroup, zoneName, name, dns.AAAA)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
@@ -113,7 +113,7 @@ func resourceArmDnsAaaaRecordRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	d.Set("name", name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	d.Set("zone_name", zoneName)
 	d.Set("ttl", resp.TTL)
 
@@ -134,11 +134,11 @@ func resourceArmDnsAaaaRecordDelete(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["AAAA"]
 	zoneName := id.Path["dnszones"]
 
-	resp, err := dnsClient.Delete(ctx, resGroup, zoneName, name, dns.AAAA, "")
+	resp, err := dnsClient.Delete(ctx, resourceGroup, zoneName, name, dns.AAAA, "")
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("Error deleting DNS AAAA Record %s: %+v", name, err)
 	}

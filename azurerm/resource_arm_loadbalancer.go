@@ -144,7 +144,7 @@ func resourceArmLoadBalancerCreate(d *schema.ResourceData, meta interface{}) err
 
 	name := d.Get("name").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	sku := network.LoadBalancerSku{
 		Name: network.LoadBalancerSkuName(d.Get("sku").(string)),
 	}
@@ -165,22 +165,22 @@ func resourceArmLoadBalancerCreate(d *schema.ResourceData, meta interface{}) err
 		LoadBalancerPropertiesFormat: &properties,
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, name, loadBalancer)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, name, loadBalancer)
 	if err != nil {
-		return fmt.Errorf("Error Creating/Updating Load Balancer %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error Creating/Updating Load Balancer %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	err = future.WaitForCompletionRef(ctx, client.Client)
 	if err != nil {
-		return fmt.Errorf("Error Creating/Updating Load Balancer %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error Creating/Updating Load Balancer %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
-	read, err := client.Get(ctx, resGroup, name, "")
+	read, err := client.Get(ctx, resourceGroup, name, "")
 	if err != nil {
-		return fmt.Errorf("Error Retrieving Load Balancer %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error Retrieving Load Balancer %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read Load Balancer %q (resource group %q) ID", name, resGroup)
+		return fmt.Errorf("Cannot read Load Balancer %q (resource group %q) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -190,11 +190,11 @@ func resourceArmLoadBalancerCreate(d *schema.ResourceData, meta interface{}) err
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"Accepted", "Updating"},
 		Target:  []string{"Succeeded"},
-		Refresh: loadbalancerStateRefreshFunc(ctx, client, resGroup, name),
+		Refresh: loadbalancerStateRefreshFunc(ctx, client, resourceGroup, name),
 		Timeout: 10 * time.Minute,
 	}
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("Error waiting for Load Balancer (%q - Resource Group %q) to become available: %s", name, resGroup, err)
+		return fmt.Errorf("Error waiting for Load Balancer (%q - Resource Group %q) to become available: %s", name, resourceGroup, err)
 	}
 
 	return resourceArmLoadBalancerRead(d, meta)
@@ -262,17 +262,17 @@ func resourceArmLoadBalancerDelete(d *schema.ResourceData, meta interface{}) err
 	if err != nil {
 		return fmt.Errorf("Error Parsing Azure Resource ID: %+v", err)
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["loadBalancers"]
 
-	future, err := client.Delete(ctx, resGroup, name)
+	future, err := client.Delete(ctx, resourceGroup, name)
 	if err != nil {
-		return fmt.Errorf("Error deleting Load Balancer %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error deleting Load Balancer %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	err = future.WaitForCompletionRef(ctx, client.Client)
 	if err != nil {
-		return fmt.Errorf("Error waiting for the deleting Load Balancer %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error waiting for the deleting Load Balancer %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	return nil

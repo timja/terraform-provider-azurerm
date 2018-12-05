@@ -55,15 +55,15 @@ func dataSourceArmManagedDiskRead(d *schema.ResourceData, meta interface{}) erro
 	client := meta.(*ArmClient).diskClient
 	ctx := meta.(*ArmClient).StopContext
 
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	name := d.Get("name").(string)
 
-	resp, err := client.Get(ctx, resGroup, name)
+	resp, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
-			return fmt.Errorf("Error: Managed Disk %q (Resource Group %q) was not found", name, resGroup)
+			return fmt.Errorf("Error: Managed Disk %q (Resource Group %q) was not found", name, resourceGroup)
 		}
-		return fmt.Errorf("[ERROR] Error making Read request on Azure Managed Disk %q (Resource Group %q): %s", name, resGroup, err)
+		return fmt.Errorf("[ERROR] Error making Read request on Azure Managed Disk %q (Resource Group %q): %s", name, resourceGroup, err)
 	}
 
 	d.SetId(*resp.ID)

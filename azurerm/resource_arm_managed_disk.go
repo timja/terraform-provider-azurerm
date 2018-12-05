@@ -120,7 +120,7 @@ func resourceArmManagedDiskCreate(d *schema.ResourceData, meta interface{}) erro
 
 	name := d.Get("name").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	storageAccountType := d.Get("storage_account_type").(string)
 	osType := d.Get("os_type").(string)
 	tags := d.Get("tags").(map[string]interface{})
@@ -187,7 +187,7 @@ func resourceArmManagedDiskCreate(d *schema.ResourceData, meta interface{}) erro
 		createDisk.EncryptionSettings = expandManagedDiskEncryptionSettings(settings)
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, name, createDisk)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, name, createDisk)
 	if err != nil {
 		return err
 	}
@@ -197,12 +197,12 @@ func resourceArmManagedDiskCreate(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	read, err := client.Get(ctx, resGroup, name)
+	read, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
 		return err
 	}
 	if read.ID == nil {
-		return fmt.Errorf("[ERROR] Cannot read Managed Disk %s (resource group %s) ID", name, resGroup)
+		return fmt.Errorf("[ERROR] Cannot read Managed Disk %s (resource group %s) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -218,20 +218,20 @@ func resourceArmManagedDiskRead(d *schema.ResourceData, meta interface{}) error 
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["disks"]
 
-	resp, err := client.Get(ctx, resGroup, name)
+	resp, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("[ERROR] Error making Read request on Azure Managed Disk %s (resource group %s): %s", name, resGroup, err)
+		return fmt.Errorf("[ERROR] Error making Read request on Azure Managed Disk %s (resource group %s): %s", name, resourceGroup, err)
 	}
 
 	d.Set("name", resp.Name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	d.Set("zones", resp.Zones)
 
 	if location := resp.Location; location != nil {
@@ -275,10 +275,10 @@ func resourceArmManagedDiskDelete(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["disks"]
 
-	future, err := client.Delete(ctx, resGroup, name)
+	future, err := client.Delete(ctx, resourceGroup, name)
 	if err != nil {
 		if !response.WasNotFound(future.Response()) {
 			return err

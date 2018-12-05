@@ -728,12 +728,12 @@ func resourceArmApplicationGatewayCreateUpdate(d *schema.ResourceData, meta inte
 
 	name := d.Get("name").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	tags := d.Get("tags").(map[string]interface{})
 
 	// Gateway ID is needed to link sub-resources together in expand functions
 	gatewayIDFmt := "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/applicationGateways/%s"
-	gatewayID := fmt.Sprintf(gatewayIDFmt, armClient.subscriptionId, resGroup, name)
+	gatewayID := fmt.Sprintf(gatewayIDFmt, armClient.subscriptionId, resourceGroup, name)
 
 	authenticationCertificates := expandApplicationGatewayAuthenticationCertificates(d)
 	backendAddressPools := expandApplicationGatewayBackendAddressPools(d)
@@ -773,22 +773,22 @@ func resourceArmApplicationGatewayCreateUpdate(d *schema.ResourceData, meta inte
 		gateway.ApplicationGatewayPropertiesFormat.WebApplicationFirewallConfiguration = expandApplicationGatewayWafConfig(d)
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, name, gateway)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, name, gateway)
 	if err != nil {
-		return fmt.Errorf("Error Creating/Updating Application Gateway %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error Creating/Updating Application Gateway %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	err = future.WaitForCompletionRef(ctx, client.Client)
 	if err != nil {
-		return fmt.Errorf("Error waiting for the create/update of Application Gateway %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error waiting for the create/update of Application Gateway %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
-	read, err := client.Get(ctx, resGroup, name)
+	read, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
-		return fmt.Errorf("Error retrieving Application Gateway %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error retrieving Application Gateway %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read ID of Application Gateway %q (Resource Group %q)", name, resGroup)
+		return fmt.Errorf("Cannot read ID of Application Gateway %q (Resource Group %q)", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -804,13 +804,13 @@ func resourceArmApplicationGatewayRead(d *schema.ResourceData, meta interface{})
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["applicationGateways"]
 
-	applicationGateway, err := client.Get(ctx, resGroup, name)
+	applicationGateway, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(applicationGateway.Response) {
-			log.Printf("[DEBUG] Application Gateway %q was not found in Resource Group %q - removing from state", name, resGroup)
+			log.Printf("[DEBUG] Application Gateway %q was not found in Resource Group %q - removing from state", name, resourceGroup)
 			d.SetId("")
 			return nil
 		}
@@ -912,17 +912,17 @@ func resourceArmApplicationGatewayDelete(d *schema.ResourceData, meta interface{
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["applicationGateways"]
 
-	future, err := client.Delete(ctx, resGroup, name)
+	future, err := client.Delete(ctx, resourceGroup, name)
 	if err != nil {
-		return fmt.Errorf("Error deleting for Application Gateway %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error deleting for Application Gateway %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	err = future.WaitForCompletionRef(ctx, client.Client)
 	if err != nil {
-		return fmt.Errorf("Error waiting for deletion of Application Gateway %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error waiting for deletion of Application Gateway %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	return nil

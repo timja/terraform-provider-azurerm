@@ -155,7 +155,7 @@ func resourceArmTrafficManagerEndpointRead(d *schema.ResourceData, meta interfac
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 
 	// lookup endpointType in Azure ID path
 	var endpointType string
@@ -169,16 +169,16 @@ func resourceArmTrafficManagerEndpointRead(d *schema.ResourceData, meta interfac
 	name := id.Path[endpointType]
 
 	ctx := meta.(*ArmClient).StopContext
-	resp, err := client.Get(ctx, resGroup, profileName, endpointType, name)
+	resp, err := client.Get(ctx, resourceGroup, profileName, endpointType, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Error making Read request on TrafficManager Endpoint %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error making Read request on TrafficManager Endpoint %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	d.Set("name", resp.Name)
 	d.Set("type", endpointType)
 	d.Set("profile_name", profileName)
@@ -205,14 +205,14 @@ func resourceArmTrafficManagerEndpointDelete(d *schema.ResourceData, meta interf
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	endpointType := d.Get("type").(string)
 	profileName := id.Path["trafficManagerProfiles"]
 
 	// endpoint name is keyed by endpoint type in ARM ID
 	name := id.Path[endpointType]
 	ctx := meta.(*ArmClient).StopContext
-	resp, err := client.Delete(ctx, resGroup, profileName, endpointType, name)
+	resp, err := client.Delete(ctx, resourceGroup, profileName, endpointType, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			return nil

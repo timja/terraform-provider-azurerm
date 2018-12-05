@@ -55,7 +55,7 @@ func resourceArmUserAssignedIdentityCreateUpdate(d *schema.ResourceData, meta in
 
 	name := d.Get("name").(string)
 	location := d.Get("location").(string)
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	tags := d.Get("tags").(map[string]interface{})
 	identity := msi.Identity{
 		Name:     &name,
@@ -63,18 +63,18 @@ func resourceArmUserAssignedIdentityCreateUpdate(d *schema.ResourceData, meta in
 		Tags:     expandTags(tags),
 	}
 
-	_, err := client.CreateOrUpdate(ctx, resGroup, name, identity)
+	_, err := client.CreateOrUpdate(ctx, resourceGroup, name, identity)
 	if err != nil {
-		return fmt.Errorf("Error Creating/Updating User Assigned Identity %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error Creating/Updating User Assigned Identity %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
-	read, err := client.Get(ctx, resGroup, name)
+	read, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
 		return err
 	}
 
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read User Assigned Identity %q ID (resource group %q) ID", name, resGroup)
+		return fmt.Errorf("Cannot read User Assigned Identity %q ID (resource group %q) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -91,19 +91,19 @@ func resourceArmUserAssignedIdentityRead(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["userAssignedIdentities"]
-	resp, err := client.Get(ctx, resGroup, name)
+	resp, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Error making Read request on User Assigned Identity %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error making Read request on User Assigned Identity %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	d.Set("name", resp.Name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	d.Set("location", resp.Location)
 
 	if props := resp.IdentityProperties; props != nil {
@@ -130,12 +130,12 @@ func resourceArmUserAssignedIdentityDelete(d *schema.ResourceData, meta interfac
 		return err
 	}
 
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["userAssignedIdentities"]
 
-	_, err = client.Delete(ctx, resGroup, name)
+	_, err = client.Delete(ctx, resourceGroup, name)
 	if err != nil {
-		return fmt.Errorf("Error deleting User Assigned Identity %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error deleting User Assigned Identity %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	return nil

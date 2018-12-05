@@ -41,22 +41,22 @@ func resourceArmAppServiceActiveSlotCreate(d *schema.ResourceData, meta interfac
 	ctx := meta.(*ArmClient).StopContext
 
 	appServiceName := d.Get("app_service_name").(string)
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	targetSlot := d.Get("app_service_slot_name").(string)
 	preserveVnet := true
 
-	resp, err := client.Get(ctx, resGroup, appServiceName)
+	resp, err := client.Get(ctx, resourceGroup, appServiceName)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
-			return fmt.Errorf("[DEBUG] App Service %q (resource group %q) was not found.", appServiceName, resGroup)
+			return fmt.Errorf("[DEBUG] App Service %q (resource group %q) was not found.", appServiceName, resourceGroup)
 		}
 		return fmt.Errorf("Error making Read request on AzureRM App Service %q: %+v", appServiceName, err)
 	}
 
-	_, err = client.Get(ctx, resGroup, targetSlot)
+	_, err = client.Get(ctx, resourceGroup, targetSlot)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
-			return fmt.Errorf("[DEBUG] App Service Target Active Slot %q/%q (resource group %q) was not found.", appServiceName, targetSlot, resGroup)
+			return fmt.Errorf("[DEBUG] App Service Target Active Slot %q/%q (resource group %q) was not found.", appServiceName, targetSlot, resourceGroup)
 		}
 		return fmt.Errorf("Error making Read request on AzureRM App Service Slot %q/%q: %+v", appServiceName, targetSlot, err)
 	}
@@ -66,7 +66,7 @@ func resourceArmAppServiceActiveSlotCreate(d *schema.ResourceData, meta interfac
 		PreserveVnet: &preserveVnet,
 	}
 
-	future, err := client.SwapSlotWithProduction(ctx, resGroup, appServiceName, cmsSlotEntity)
+	future, err := client.SwapSlotWithProduction(ctx, resourceGroup, appServiceName, cmsSlotEntity)
 	if err != nil {
 		return fmt.Errorf("Error swapping App Service Slot %q/%q: %+v", appServiceName, targetSlot, err)
 	}
@@ -87,13 +87,13 @@ func resourceArmAppServiceActiveSlotRead(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["sites"]
 
-	resp, err := client.Get(ctx, resGroup, name)
+	resp, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
-			log.Printf("[DEBUG] App Service %q (resource group %q) was not found - removing from state", name, resGroup)
+			log.Printf("[DEBUG] App Service %q (resource group %q) was not found - removing from state", name, resourceGroup)
 			d.SetId("")
 			return nil
 		}

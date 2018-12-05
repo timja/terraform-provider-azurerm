@@ -111,7 +111,7 @@ func dataSourceArmImageRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ArmClient).imageClient
 	ctx := meta.(*ArmClient).StopContext
 
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 
 	name := d.Get("name").(string)
 	nameRegex, nameRegexOk := d.GetOk("name_regex")
@@ -124,22 +124,22 @@ func dataSourceArmImageRead(d *schema.ResourceData, meta interface{}) error {
 
 	if !nameRegexOk {
 		var err error
-		if img, err = client.Get(ctx, resGroup, name, ""); err != nil {
+		if img, err = client.Get(ctx, resourceGroup, name, ""); err != nil {
 			if utils.ResponseWasNotFound(img.Response) {
-				return fmt.Errorf("Error: Image %q (Resource Group %q) was not found", name, resGroup)
+				return fmt.Errorf("Error: Image %q (Resource Group %q) was not found", name, resourceGroup)
 			}
-			return fmt.Errorf("[ERROR] Error making Read request on Azure Image %q (resource group %q): %+v", name, resGroup, err)
+			return fmt.Errorf("[ERROR] Error making Read request on Azure Image %q (resource group %q): %+v", name, resourceGroup, err)
 		}
 	} else {
 		r := regexp.MustCompile(nameRegex.(string))
 
 		list := make([]compute.Image, 0)
-		resp, err := client.ListByResourceGroupComplete(ctx, resGroup)
+		resp, err := client.ListByResourceGroupComplete(ctx, resourceGroup)
 		if err != nil {
 			if utils.ResponseWasNotFound(resp.Response().Response) {
-				return fmt.Errorf("Error: Image %q (Resource Group %q) was not found", name, resGroup)
+				return fmt.Errorf("Error: Image %q (Resource Group %q) was not found", name, resourceGroup)
 			}
-			return fmt.Errorf("[ERROR] Error getting list of images (resource group %q): %+v", resGroup, err)
+			return fmt.Errorf("[ERROR] Error getting list of images (resource group %q): %+v", resourceGroup, err)
 		}
 
 		for resp.NotDone() {
@@ -174,7 +174,7 @@ func dataSourceArmImageRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(*img.ID)
 	d.Set("name", img.Name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	if location := img.Location; location != nil {
 		d.Set("location", azureRMNormalizeLocation(*location))
 	}

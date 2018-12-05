@@ -109,7 +109,7 @@ func resourceArmExpressRouteCircuitCreateOrUpdate(d *schema.ResourceData, meta i
 	log.Printf("[INFO] preparing arguments for Azure ARM ExpressRouteCircuit creation.")
 
 	name := d.Get("name").(string)
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
 	serviceProviderName := d.Get("service_provider_name").(string)
 	peeringLocation := d.Get("peering_location").(string)
@@ -137,22 +137,22 @@ func resourceArmExpressRouteCircuitCreateOrUpdate(d *schema.ResourceData, meta i
 	azureRMLockByName(name, expressRouteCircuitResourceName)
 	defer azureRMUnlockByName(name, expressRouteCircuitResourceName)
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, name, erc)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, name, erc)
 	if err != nil {
-		return fmt.Errorf("Error Creating/Updating ExpressRouteCircuit %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error Creating/Updating ExpressRouteCircuit %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	err = future.WaitForCompletionRef(ctx, client.Client)
 	if err != nil {
-		return fmt.Errorf("Error Creating/Updating ExpressRouteCircuit %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error Creating/Updating ExpressRouteCircuit %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
-	read, err := client.Get(ctx, resGroup, name)
+	read, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
-		return fmt.Errorf("Error Retrieving ExpressRouteCircuit %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error Retrieving ExpressRouteCircuit %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read ExpressRouteCircuit %q (resource group %q) ID", name, resGroup)
+		return fmt.Errorf("Cannot read ExpressRouteCircuit %q (resource group %q) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)

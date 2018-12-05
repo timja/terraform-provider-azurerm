@@ -165,7 +165,7 @@ func resourceArmImageCreateUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	name := d.Get("name").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	expandedTags := expandTags(d.Get("tags").(map[string]interface{}))
 
 	properties := compute.ImageProperties{}
@@ -217,7 +217,7 @@ func resourceArmImageCreateUpdate(d *schema.ResourceData, meta interface{}) erro
 		ImageProperties: &properties,
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, name, createImage)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, name, createImage)
 	if err != nil {
 		return err
 	}
@@ -227,12 +227,12 @@ func resourceArmImageCreateUpdate(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	read, err := client.Get(ctx, resGroup, name, "")
+	read, err := client.Get(ctx, resourceGroup, name, "")
 	if err != nil {
 		return err
 	}
 	if read.ID == nil {
-		return fmt.Errorf("[ERROR] Cannot read AzureRM Image %s (resource group %s) ID", name, resGroup)
+		return fmt.Errorf("[ERROR] Cannot read AzureRM Image %s (resource group %s) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -248,20 +248,20 @@ func resourceArmImageRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["images"]
 
-	resp, err := client.Get(ctx, resGroup, name, "")
+	resp, err := client.Get(ctx, resourceGroup, name, "")
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("[ERROR] Error making Read request on AzureRM Image %q (resource group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("[ERROR] Error making Read request on AzureRM Image %q (resource group %q): %+v", name, resourceGroup, err)
 	}
 
 	d.Set("name", resp.Name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	if location := resp.Location; location != nil {
 		d.Set("location", azureRMNormalizeLocation(*location))
 	}
@@ -296,10 +296,10 @@ func resourceArmImageDelete(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["images"]
 
-	future, err := client.Delete(ctx, resGroup, name)
+	future, err := client.Delete(ctx, resourceGroup, name)
 	if err != nil {
 		return err
 	}

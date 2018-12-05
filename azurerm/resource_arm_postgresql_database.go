@@ -59,7 +59,7 @@ func resourceArmPostgreSQLDatabaseCreate(d *schema.ResourceData, meta interface{
 	log.Printf("[INFO] preparing arguments for AzureRM PostgreSQL Database creation.")
 
 	name := d.Get("name").(string)
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	serverName := d.Get("server_name").(string)
 
 	charset := d.Get("charset").(string)
@@ -72,7 +72,7 @@ func resourceArmPostgreSQLDatabaseCreate(d *schema.ResourceData, meta interface{
 		},
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, serverName, name, properties)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, serverName, name, properties)
 	if err != nil {
 		return err
 	}
@@ -82,12 +82,12 @@ func resourceArmPostgreSQLDatabaseCreate(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	read, err := client.Get(ctx, resGroup, serverName, name)
+	read, err := client.Get(ctx, resourceGroup, serverName, name)
 	if err != nil {
 		return err
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read PostgreSQL Database %s (resource group %s) ID", name, resGroup)
+		return fmt.Errorf("Cannot read PostgreSQL Database %s (resource group %s) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -103,14 +103,14 @@ func resourceArmPostgreSQLDatabaseRead(d *schema.ResourceData, meta interface{})
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	serverName := id.Path["servers"]
 	name := id.Path["databases"]
 
-	resp, err := client.Get(ctx, resGroup, serverName, name)
+	resp, err := client.Get(ctx, resourceGroup, serverName, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
-			log.Printf("[WARN] PostgreSQL Database '%s' was not found (resource group '%s')", name, resGroup)
+			log.Printf("[WARN] PostgreSQL Database '%s' was not found (resource group '%s')", name, resourceGroup)
 			d.SetId("")
 			return nil
 		}
@@ -119,7 +119,7 @@ func resourceArmPostgreSQLDatabaseRead(d *schema.ResourceData, meta interface{})
 	}
 
 	d.Set("name", resp.Name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	d.Set("server_name", serverName)
 
 	if props := resp.DatabaseProperties; props != nil {
@@ -142,11 +142,11 @@ func resourceArmPostgreSQLDatabaseDelete(d *schema.ResourceData, meta interface{
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	serverName := id.Path["servers"]
 	name := id.Path["databases"]
 
-	future, err := client.Delete(ctx, resGroup, serverName, name)
+	future, err := client.Delete(ctx, resourceGroup, serverName, name)
 	if err != nil {
 		if response.WasNotFound(future.Response()) {
 			return nil

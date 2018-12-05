@@ -81,7 +81,7 @@ func resourceArmDnsCaaRecordCreateOrUpdate(d *schema.ResourceData, meta interfac
 	ctx := meta.(*ArmClient).StopContext
 
 	name := d.Get("name").(string)
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	zoneName := d.Get("zone_name").(string)
 	ttl := int64(d.Get("ttl").(int))
 	tags := d.Get("tags").(map[string]interface{})
@@ -102,13 +102,13 @@ func resourceArmDnsCaaRecordCreateOrUpdate(d *schema.ResourceData, meta interfac
 
 	eTag := ""
 	ifNoneMatch := "" // set to empty to allow updates to records after creation
-	resp, err := client.CreateOrUpdate(ctx, resGroup, zoneName, name, dns.CAA, parameters, eTag, ifNoneMatch)
+	resp, err := client.CreateOrUpdate(ctx, resourceGroup, zoneName, name, dns.CAA, parameters, eTag, ifNoneMatch)
 	if err != nil {
 		return err
 	}
 
 	if resp.ID == nil {
-		return fmt.Errorf("Cannot read DNS CAA Record %s (resource group %s) ID", name, resGroup)
+		return fmt.Errorf("Cannot read DNS CAA Record %s (resource group %s) ID", name, resourceGroup)
 	}
 
 	d.SetId(*resp.ID)
@@ -125,11 +125,11 @@ func resourceArmDnsCaaRecordRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["CAA"]
 	zoneName := id.Path["dnszones"]
 
-	resp, err := client.Get(ctx, resGroup, zoneName, name, dns.CAA)
+	resp, err := client.Get(ctx, resourceGroup, zoneName, name, dns.CAA)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
@@ -139,7 +139,7 @@ func resourceArmDnsCaaRecordRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	d.Set("name", name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	d.Set("zone_name", zoneName)
 	d.Set("ttl", resp.TTL)
 
@@ -160,11 +160,11 @@ func resourceArmDnsCaaRecordDelete(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["CAA"]
 	zoneName := id.Path["dnszones"]
 
-	resp, err := client.Delete(ctx, resGroup, zoneName, name, dns.CAA, "")
+	resp, err := client.Delete(ctx, resourceGroup, zoneName, name, dns.CAA, "")
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("Error deleting DNS CAA Record %s: %+v", name, err)
 	}

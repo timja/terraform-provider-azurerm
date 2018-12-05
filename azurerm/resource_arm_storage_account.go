@@ -599,9 +599,9 @@ func resourceArmStorageAccountRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 	name := id.Path["storageAccounts"]
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 
-	resp, err := client.GetProperties(ctx, resGroup, name)
+	resp, err := client.GetProperties(ctx, resourceGroup, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
@@ -610,14 +610,14 @@ func resourceArmStorageAccountRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("Error reading the state of AzureRM Storage Account %q: %+v", name, err)
 	}
 
-	keys, err := client.ListKeys(ctx, resGroup, name)
+	keys, err := client.ListKeys(ctx, resourceGroup, name)
 	if err != nil {
 		return err
 	}
 
 	accessKeys := *keys.Keys
 	d.Set("name", resp.Name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	if location := resp.Location; location != nil {
 		d.Set("location", azureRMNormalizeLocation(*location))
 	}

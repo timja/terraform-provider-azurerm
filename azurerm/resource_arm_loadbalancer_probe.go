@@ -124,27 +124,27 @@ func resourceArmLoadBalancerProbeCreateUpdate(d *schema.ResourceData, meta inter
 	}
 
 	loadBalancer.LoadBalancerPropertiesFormat.Probes = &probes
-	resGroup, loadBalancerName, err := resourceGroupAndLBNameFromId(d.Get("loadbalancer_id").(string))
+	resourceGroup, loadBalancerName, err := resourceGroupAndLBNameFromId(d.Get("loadbalancer_id").(string))
 	if err != nil {
 		return fmt.Errorf("Error Getting Load Balancer Name and Group: %+v", err)
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, loadBalancerName, *loadBalancer)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, loadBalancerName, *loadBalancer)
 	if err != nil {
-		return fmt.Errorf("Error Creating/Updating Load Balancer %q (Resource Group %q): %+v", loadBalancerName, resGroup, err)
+		return fmt.Errorf("Error Creating/Updating Load Balancer %q (Resource Group %q): %+v", loadBalancerName, resourceGroup, err)
 	}
 
 	err = future.WaitForCompletionRef(ctx, client.Client)
 	if err != nil {
-		return fmt.Errorf("Error waiting for completion of Load Balancer %q (Resource Group %q): %+v", loadBalancerName, resGroup, err)
+		return fmt.Errorf("Error waiting for completion of Load Balancer %q (Resource Group %q): %+v", loadBalancerName, resourceGroup, err)
 	}
 
-	read, err := client.Get(ctx, resGroup, loadBalancerName, "")
+	read, err := client.Get(ctx, resourceGroup, loadBalancerName, "")
 	if err != nil {
-		return fmt.Errorf("Error retrieving Load Balancer %q (Resource Group %q): %+v", loadBalancerName, resGroup, err)
+		return fmt.Errorf("Error retrieving Load Balancer %q (Resource Group %q): %+v", loadBalancerName, resourceGroup, err)
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read Load Balancer %q (resource group %q) ID", loadBalancerName, resGroup)
+		return fmt.Errorf("Cannot read Load Balancer %q (resource group %q) ID", loadBalancerName, resourceGroup)
 	}
 
 	var createdProbeId string
@@ -164,11 +164,11 @@ func resourceArmLoadBalancerProbeCreateUpdate(d *schema.ResourceData, meta inter
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"Accepted", "Updating"},
 		Target:  []string{"Succeeded"},
-		Refresh: loadbalancerStateRefreshFunc(ctx, client, resGroup, loadBalancerName),
+		Refresh: loadbalancerStateRefreshFunc(ctx, client, resourceGroup, loadBalancerName),
 		Timeout: 10 * time.Minute,
 	}
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("Error waiting for Load Balancer (%q - Resource Group %q) to become available: %+v", loadBalancerName, resGroup, err)
+		return fmt.Errorf("Error waiting for Load Balancer (%q - Resource Group %q) to become available: %+v", loadBalancerName, resourceGroup, err)
 	}
 
 	return resourceArmLoadBalancerProbeRead(d, meta)
@@ -250,27 +250,27 @@ func resourceArmLoadBalancerProbeDelete(d *schema.ResourceData, meta interface{}
 	newProbes := append(oldProbes[:index], oldProbes[index+1:]...)
 	loadBalancer.LoadBalancerPropertiesFormat.Probes = &newProbes
 
-	resGroup, loadBalancerName, err := resourceGroupAndLBNameFromId(d.Get("loadbalancer_id").(string))
+	resourceGroup, loadBalancerName, err := resourceGroupAndLBNameFromId(d.Get("loadbalancer_id").(string))
 	if err != nil {
 		return fmt.Errorf("Error Getting Load Balancer Name and Group:: %+v", err)
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, loadBalancerName, *loadBalancer)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, loadBalancerName, *loadBalancer)
 	if err != nil {
-		return fmt.Errorf("Error Creating/Updating Load Balancer %q (Resource Group %q): %+v", loadBalancerName, resGroup, err)
+		return fmt.Errorf("Error Creating/Updating Load Balancer %q (Resource Group %q): %+v", loadBalancerName, resourceGroup, err)
 	}
 
 	err = future.WaitForCompletionRef(ctx, client.Client)
 	if err != nil {
-		return fmt.Errorf("Error waiting for completion of Load Balancer %q (Resource Group %q): %+v", loadBalancerName, resGroup, err)
+		return fmt.Errorf("Error waiting for completion of Load Balancer %q (Resource Group %q): %+v", loadBalancerName, resourceGroup, err)
 	}
 
-	read, err := client.Get(ctx, resGroup, loadBalancerName, "")
+	read, err := client.Get(ctx, resourceGroup, loadBalancerName, "")
 	if err != nil {
 		return fmt.Errorf("Error Getting LoadBalancer: %+v", err)
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read Load Balancer %s (resource group %s) ID", loadBalancerName, resGroup)
+		return fmt.Errorf("Cannot read Load Balancer %s (resource group %s) ID", loadBalancerName, resourceGroup)
 	}
 
 	return nil

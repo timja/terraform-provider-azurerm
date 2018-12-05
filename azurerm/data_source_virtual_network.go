@@ -57,16 +57,16 @@ func dataSourceArmVnetRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ArmClient).vnetClient
 	ctx := meta.(*ArmClient).StopContext
 
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	name := d.Get("name").(string)
 
-	resp, err := client.Get(ctx, resGroup, name, "")
+	resp, err := client.Get(ctx, resourceGroup, name, "")
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
-			return fmt.Errorf("Error: Virtual Network %q (Resource Group %q) was not found", name, resGroup)
+			return fmt.Errorf("Error: Virtual Network %q (Resource Group %q) was not found", name, resourceGroup)
 		}
 
-		return fmt.Errorf("Error making Read request on Virtual Network %q (resource group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error making Read request on Virtual Network %q (resource group %q): %+v", name, resourceGroup, err)
 	}
 
 	d.SetId(*resp.ID)

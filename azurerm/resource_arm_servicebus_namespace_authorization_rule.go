@@ -88,11 +88,11 @@ func resourceArmServiceBusNamespaceAuthorizationRuleRead(d *schema.ResourceData,
 		return err
 	}
 
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	namespaceName := id.Path["namespaces"]
 	name := id.Path["AuthorizationRules"] //this is slightly different then a topic rule (Authorization vs authorization)
 
-	resp, err := client.GetAuthorizationRule(ctx, resGroup, namespaceName, name)
+	resp, err := client.GetAuthorizationRule(ctx, resourceGroup, namespaceName, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
@@ -103,7 +103,7 @@ func resourceArmServiceBusNamespaceAuthorizationRuleRead(d *schema.ResourceData,
 
 	d.Set("name", name)
 	d.Set("namespace_name", namespaceName)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 
 	if properties := resp.SBAuthorizationRuleProperties; properties != nil {
 		listen, send, manage := azure.FlattenServiceBusAuthorizationRuleRights(properties.Rights)
@@ -112,7 +112,7 @@ func resourceArmServiceBusNamespaceAuthorizationRuleRead(d *schema.ResourceData,
 		d.Set("send", send)
 	}
 
-	keysResp, err := client.ListKeys(ctx, resGroup, namespaceName, name)
+	keysResp, err := client.ListKeys(ctx, resourceGroup, namespaceName, name)
 	if err != nil {
 		return fmt.Errorf("Error making Read request on Azure ServiceBus Namespace Authorization Rule List Keys %s: %+v", name, err)
 	}
@@ -134,12 +134,12 @@ func resourceArmServiceBusNamespaceAuthorizationRuleDelete(d *schema.ResourceDat
 		return err
 	}
 
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	namespaceName := id.Path["namespaces"]
 	name := id.Path["AuthorizationRules"] //this is slightly different then topic/queue (Authorization vs authorization)
 
-	if _, err = client.DeleteAuthorizationRule(ctx, resGroup, namespaceName, name); err != nil {
-		return fmt.Errorf("Error issuing Azure ARM delete request of ServiceBus Namespace Authorization Rule %q (Resource Group %q): %+v", name, resGroup, err)
+	if _, err = client.DeleteAuthorizationRule(ctx, resourceGroup, namespaceName, name); err != nil {
+		return fmt.Errorf("Error issuing Azure ARM delete request of ServiceBus Namespace Authorization Rule %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	return nil

@@ -125,7 +125,7 @@ func resourceArmPublicIpCreate(d *schema.ResourceData, meta interface{}) error {
 
 	name := d.Get("name").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	sku := network.PublicIPAddressSku{
 		Name: network.PublicIPAddressSkuName(d.Get("sku").(string)),
 	}
@@ -180,21 +180,21 @@ func resourceArmPublicIpCreate(d *schema.ResourceData, meta interface{}) error {
 		publicIp.PublicIPAddressPropertiesFormat.DNSSettings = &dnsSettings
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, name, publicIp)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, name, publicIp)
 	if err != nil {
-		return fmt.Errorf("Error Creating/Updating Public IP %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error Creating/Updating Public IP %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	if err = future.WaitForCompletionRef(ctx, client.Client); err != nil {
-		return fmt.Errorf("Error waiting for completion of Public IP %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error waiting for completion of Public IP %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
-	read, err := client.Get(ctx, resGroup, name, "")
+	read, err := client.Get(ctx, resourceGroup, name, "")
 	if err != nil {
 		return err
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read Public IP %q (resource group %q) ID", name, resGroup)
+		return fmt.Errorf("Cannot read Public IP %q (resource group %q) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -210,21 +210,21 @@ func resourceArmPublicIpRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["publicIPAddresses"]
 
-	resp, err := client.Get(ctx, resGroup, name, "")
+	resp, err := client.Get(ctx, resourceGroup, name, "")
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
 			return nil
 		}
 
-		return fmt.Errorf("Error making Read request on Public IP %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error making Read request on Public IP %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	d.Set("name", resp.Name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	d.Set("zones", resp.Zones)
 	if location := resp.Location; location != nil {
 		d.Set("location", azureRMNormalizeLocation(*location))
@@ -260,16 +260,16 @@ func resourceArmPublicIpDelete(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["publicIPAddresses"]
 
-	future, err := client.Delete(ctx, resGroup, name)
+	future, err := client.Delete(ctx, resourceGroup, name)
 	if err != nil {
-		return fmt.Errorf("Error deleting Public IP %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error deleting Public IP %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	if err = future.WaitForCompletionRef(ctx, client.Client); err != nil {
-		return fmt.Errorf("Error waiting for deletion of Public IP %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error waiting for deletion of Public IP %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	return nil

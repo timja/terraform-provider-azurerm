@@ -80,7 +80,7 @@ func resourceArmAutomationModuleCreateUpdate(d *schema.ResourceData, meta interf
 	log.Printf("[INFO] preparing arguments for AzureRM Automation Module creation.")
 
 	name := d.Get("name").(string)
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	accName := d.Get("automation_account_name").(string)
 	contentLink := expandModuleLink(d)
 
@@ -90,18 +90,18 @@ func resourceArmAutomationModuleCreateUpdate(d *schema.ResourceData, meta interf
 		},
 	}
 
-	_, err := client.CreateOrUpdate(ctx, resGroup, accName, name, parameters)
+	_, err := client.CreateOrUpdate(ctx, resourceGroup, accName, name, parameters)
 	if err != nil {
 		return err
 	}
 
-	read, err := client.Get(ctx, resGroup, accName, name)
+	read, err := client.Get(ctx, resourceGroup, accName, name)
 	if err != nil {
 		return err
 	}
 
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read Automation Module %q (resource group %q) ID", name, resGroup)
+		return fmt.Errorf("Cannot read Automation Module %q (resource group %q) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -117,11 +117,11 @@ func resourceArmAutomationModuleRead(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	accName := id.Path["automationAccounts"]
 	name := id.Path["modules"]
 
-	resp, err := client.Get(ctx, resGroup, accName, name)
+	resp, err := client.Get(ctx, resourceGroup, accName, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
@@ -132,7 +132,7 @@ func resourceArmAutomationModuleRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.Set("name", resp.Name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	d.Set("automation_account_name", accName)
 
 	return nil
@@ -146,11 +146,11 @@ func resourceArmAutomationModuleDelete(d *schema.ResourceData, meta interface{})
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	accName := id.Path["automationAccounts"]
 	name := id.Path["modules"]
 
-	resp, err := client.Delete(ctx, resGroup, accName, name)
+	resp, err := client.Delete(ctx, resourceGroup, accName, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp) {
 			return nil

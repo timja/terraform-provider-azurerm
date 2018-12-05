@@ -71,7 +71,7 @@ func resourceArmLogAnalyticsWorkspaceLinkedServiceCreateUpdate(d *schema.Resourc
 	ctx := meta.(*ArmClient).StopContext
 	log.Printf("[INFO] preparing arguments for AzureRM Log Analytics linked services creation.")
 
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 
 	workspaceName := d.Get("workspace_name").(string)
 	lsName := d.Get("linked_service_name").(string)
@@ -88,18 +88,18 @@ func resourceArmLogAnalyticsWorkspaceLinkedServiceCreateUpdate(d *schema.Resourc
 		},
 	}
 
-	_, err := client.CreateOrUpdate(ctx, resGroup, workspaceName, lsName, parameters)
+	_, err := client.CreateOrUpdate(ctx, resourceGroup, workspaceName, lsName, parameters)
 	if err != nil {
-		return fmt.Errorf("Error issuing create request for Log Analytics Workspace Linked Service %q/%q (Resource Group %q): %+v", workspaceName, lsName, resGroup, err)
+		return fmt.Errorf("Error issuing create request for Log Analytics Workspace Linked Service %q/%q (Resource Group %q): %+v", workspaceName, lsName, resourceGroup, err)
 	}
 
-	read, err := client.Get(ctx, resGroup, workspaceName, lsName)
+	read, err := client.Get(ctx, resourceGroup, workspaceName, lsName)
 	if err != nil {
-		return fmt.Errorf("Error retrieving Analytics Workspace Linked Service %q/%q (Resource Group %q): %+v", workspaceName, lsName, resGroup, err)
+		return fmt.Errorf("Error retrieving Analytics Workspace Linked Service %q/%q (Resource Group %q): %+v", workspaceName, lsName, resourceGroup, err)
 	}
 
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read Log Analytics Linked Service '%s' (resource group %s) ID", lsName, resGroup)
+		return fmt.Errorf("Cannot read Log Analytics Linked Service '%s' (resource group %s) ID", lsName, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -115,11 +115,11 @@ func resourceArmLogAnalyticsWorkspaceLinkedServiceRead(d *schema.ResourceData, m
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	workspaceName := id.Path["workspaces"]
 	lsName := id.Path["linkedservices"]
 
-	resp, err := client.Get(ctx, resGroup, workspaceName, lsName)
+	resp, err := client.Get(ctx, resourceGroup, workspaceName, lsName)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
@@ -133,7 +133,7 @@ func resourceArmLogAnalyticsWorkspaceLinkedServiceRead(d *schema.ResourceData, m
 	}
 
 	d.Set("name", *resp.Name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	d.Set("workspace_name", workspaceName)
 	d.Set("linked_service_name", lsName)
 
@@ -164,11 +164,11 @@ func resourceArmLogAnalyticsWorkspaceLinkedServiceDelete(d *schema.ResourceData,
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	workspaceName := id.Path["workspaces"]
 	lsName := id.Path["linkedservices"]
 
-	resp, err := client.Delete(ctx, resGroup, workspaceName, lsName)
+	resp, err := client.Delete(ctx, resourceGroup, workspaceName, lsName)
 
 	if err != nil {
 		if utils.ResponseWasNotFound(resp) {

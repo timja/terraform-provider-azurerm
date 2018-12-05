@@ -68,7 +68,7 @@ func resourceArmAvailabilitySetCreate(d *schema.ResourceData, meta interface{}) 
 
 	name := d.Get("name").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	updateDomainCount := d.Get("platform_update_domain_count").(int)
 	faultDomainCount := d.Get("platform_fault_domain_count").(int)
 	managed := d.Get("managed").(bool)
@@ -91,7 +91,7 @@ func resourceArmAvailabilitySetCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	resp, err := client.CreateOrUpdate(ctx, resGroup, name, availSet)
+	resp, err := client.CreateOrUpdate(ctx, resourceGroup, name, availSet)
 	if err != nil {
 		return err
 	}
@@ -109,21 +109,21 @@ func resourceArmAvailabilitySetRead(d *schema.ResourceData, meta interface{}) er
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["availabilitySets"]
 
-	resp, err := client.Get(ctx, resGroup, name)
+	resp, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Error making Read request on Azure Availability Set %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error making Read request on Azure Availability Set %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	availSet := *resp.AvailabilitySetProperties
 	d.Set("name", resp.Name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	if location := resp.Location; location != nil {
 		d.Set("location", azureRMNormalizeLocation(*location))
 	}
@@ -147,10 +147,10 @@ func resourceArmAvailabilitySetDelete(d *schema.ResourceData, meta interface{}) 
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["availabilitySets"]
 
-	_, err = client.Delete(ctx, resGroup, name)
+	_, err = client.Delete(ctx, resourceGroup, name)
 
 	return err
 }

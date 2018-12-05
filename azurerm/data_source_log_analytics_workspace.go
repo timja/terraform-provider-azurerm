@@ -64,12 +64,12 @@ func dataSourceLogAnalyticsWorkspaceRead(d *schema.ResourceData, meta interface{
 	ctx := meta.(*ArmClient).StopContext
 
 	name := d.Get("name").(string)
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 
-	resp, err := client.Get(ctx, resGroup, name)
+	resp, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
-			return fmt.Errorf("Error: Log Analytics workspaces %q (Resource Group %q) was not found", name, resGroup)
+			return fmt.Errorf("Error: Log Analytics workspaces %q (Resource Group %q) was not found", name, resourceGroup)
 		}
 		return fmt.Errorf("Error making Read request on AzureRM Log Analytics workspaces '%s': %+v", name, err)
 	}
@@ -77,7 +77,7 @@ func dataSourceLogAnalyticsWorkspaceRead(d *schema.ResourceData, meta interface{
 	d.SetId(*resp.ID)
 
 	d.Set("name", resp.Name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	if location := resp.Location; location != nil {
 		d.Set("location", azureRMNormalizeLocation(*location))
 	}
@@ -89,7 +89,7 @@ func dataSourceLogAnalyticsWorkspaceRead(d *schema.ResourceData, meta interface{
 	}
 	d.Set("retention_in_days", resp.RetentionInDays)
 
-	sharedKeys, err := client.GetSharedKeys(ctx, resGroup, name)
+	sharedKeys, err := client.GetSharedKeys(ctx, resourceGroup, name)
 	if err != nil {
 		log.Printf("[ERROR] Unable to List Shared keys for Log Analytics workspaces %s: %+v", name, err)
 	} else {

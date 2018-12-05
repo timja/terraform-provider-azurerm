@@ -74,7 +74,7 @@ func resourceArmApplicationInsightsCreateOrUpdate(d *schema.ResourceData, meta i
 	log.Printf("[INFO] preparing arguments for AzureRM Application Insights creation.")
 
 	name := d.Get("name").(string)
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	applicationType := d.Get("application_type").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
 	tags := d.Get("tags").(map[string]interface{})
@@ -92,22 +92,22 @@ func resourceArmApplicationInsightsCreateOrUpdate(d *schema.ResourceData, meta i
 		Tags:                                   expandTags(tags),
 	}
 
-	resp, err := client.CreateOrUpdate(ctx, resGroup, name, insightProperties)
+	resp, err := client.CreateOrUpdate(ctx, resourceGroup, name, insightProperties)
 	if err != nil {
 		// @tombuildsstuff - from 2018-08-14 the Create call started returning a 201 instead of 200
 		// which doesn't match the Swagger - this works around it until that's fixed
 		// BUG: https://github.com/Azure/azure-sdk-for-go/issues/2465
 		if resp.StatusCode != http.StatusCreated {
-			return fmt.Errorf("Error creating Application Insights %q (Resource Group %q): %+v", name, resGroup, err)
+			return fmt.Errorf("Error creating Application Insights %q (Resource Group %q): %+v", name, resourceGroup, err)
 		}
 	}
 
-	read, err := client.Get(ctx, resGroup, name)
+	read, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
-		return fmt.Errorf("Error retrieving Application Insights %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error retrieving Application Insights %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read AzureRM Application Insights '%s' (Resource Group %s) ID", name, resGroup)
+		return fmt.Errorf("Cannot read AzureRM Application Insights '%s' (Resource Group %s) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -126,10 +126,10 @@ func resourceArmApplicationInsightsRead(d *schema.ResourceData, meta interface{}
 
 	log.Printf("[DEBUG] Reading AzureRM Application Insights '%s'", id)
 
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["components"]
 
-	resp, err := client.Get(ctx, resGroup, name)
+	resp, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
@@ -139,7 +139,7 @@ func resourceArmApplicationInsightsRead(d *schema.ResourceData, meta interface{}
 	}
 
 	d.Set("name", name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	if location := resp.Location; location != nil {
 		d.Set("location", azureRMNormalizeLocation(*location))
 	}
@@ -163,12 +163,12 @@ func resourceArmApplicationInsightsDelete(d *schema.ResourceData, meta interface
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["components"]
 
-	log.Printf("[DEBUG] Deleting AzureRM Application Insights '%s' (resource group '%s')", name, resGroup)
+	log.Printf("[DEBUG] Deleting AzureRM Application Insights '%s' (resource group '%s')", name, resourceGroup)
 
-	resp, err := client.Delete(ctx, resGroup, name)
+	resp, err := client.Delete(ctx, resourceGroup, name)
 	if err != nil {
 		if resp.StatusCode == http.StatusNotFound {
 			return nil

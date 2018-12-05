@@ -80,7 +80,7 @@ func resourceArmVirtualNetworkPeeringCreate(d *schema.ResourceData, meta interfa
 
 	name := d.Get("name").(string)
 	vnetName := d.Get("virtual_network_name").(string)
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 
 	peer := network.VirtualNetworkPeering{
 		Name:                                  &name,
@@ -90,22 +90,22 @@ func resourceArmVirtualNetworkPeeringCreate(d *schema.ResourceData, meta interfa
 	peerMutex.Lock()
 	defer peerMutex.Unlock()
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, vnetName, name, peer)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, vnetName, name, peer)
 	if err != nil {
-		return fmt.Errorf("Error Creating/Updating Virtual Network Peering %q (Network %q / Resource Group %q): %+v", name, vnetName, resGroup, err)
+		return fmt.Errorf("Error Creating/Updating Virtual Network Peering %q (Network %q / Resource Group %q): %+v", name, vnetName, resourceGroup, err)
 	}
 
 	err = future.WaitForCompletionRef(ctx, client.Client)
 	if err != nil {
-		return fmt.Errorf("Error waiting for completion of Virtual Network Peering %q (Network %q / Resource Group %q): %+v", name, vnetName, resGroup, err)
+		return fmt.Errorf("Error waiting for completion of Virtual Network Peering %q (Network %q / Resource Group %q): %+v", name, vnetName, resourceGroup, err)
 	}
 
-	read, err := client.Get(ctx, resGroup, vnetName, name)
+	read, err := client.Get(ctx, resourceGroup, vnetName, name)
 	if err != nil {
 		return err
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read ID of Virtual Network Peering %q (resource group %q)", name, resGroup)
+		return fmt.Errorf("Cannot read ID of Virtual Network Peering %q (resource group %q)", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -121,11 +121,11 @@ func resourceArmVirtualNetworkPeeringRead(d *schema.ResourceData, meta interface
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	vnetName := id.Path["virtualNetworks"]
 	name := id.Path["virtualNetworkPeerings"]
 
-	resp, err := client.Get(ctx, resGroup, vnetName, name)
+	resp, err := client.Get(ctx, resourceGroup, vnetName, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
@@ -137,7 +137,7 @@ func resourceArmVirtualNetworkPeeringRead(d *schema.ResourceData, meta interface
 	peer := *resp.VirtualNetworkPeeringPropertiesFormat
 
 	// update appropriate values
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	d.Set("name", resp.Name)
 	d.Set("virtual_network_name", vnetName)
 	d.Set("allow_virtual_network_access", peer.AllowVirtualNetworkAccess)
@@ -157,21 +157,21 @@ func resourceArmVirtualNetworkPeeringDelete(d *schema.ResourceData, meta interfa
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	vnetName := id.Path["virtualNetworks"]
 	name := id.Path["virtualNetworkPeerings"]
 
 	peerMutex.Lock()
 	defer peerMutex.Unlock()
 
-	future, err := client.Delete(ctx, resGroup, vnetName, name)
+	future, err := client.Delete(ctx, resourceGroup, vnetName, name)
 	if err != nil {
-		return fmt.Errorf("Error deleting Virtual Network Peering %q (Network %q / RG %q): %+v", name, vnetName, resGroup, err)
+		return fmt.Errorf("Error deleting Virtual Network Peering %q (Network %q / RG %q): %+v", name, vnetName, resourceGroup, err)
 	}
 
 	err = future.WaitForCompletionRef(ctx, client.Client)
 	if err != nil {
-		return fmt.Errorf("Error waiting for deletion of Virtual Network Peering %q (Network %q / RG %q): %+v", name, vnetName, resGroup, err)
+		return fmt.Errorf("Error waiting for deletion of Virtual Network Peering %q (Network %q / RG %q): %+v", name, vnetName, resourceGroup, err)
 	}
 
 	return err

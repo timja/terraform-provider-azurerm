@@ -64,7 +64,7 @@ func resourceArmEventHubConsumerGroupCreateUpdate(d *schema.ResourceData, meta i
 	name := d.Get("name").(string)
 	namespaceName := d.Get("namespace_name").(string)
 	eventHubName := d.Get("eventhub_name").(string)
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	userMetaData := d.Get("user_metadata").(string)
 
 	parameters := eventhub.ConsumerGroup{
@@ -74,19 +74,19 @@ func resourceArmEventHubConsumerGroupCreateUpdate(d *schema.ResourceData, meta i
 		},
 	}
 
-	_, err := client.CreateOrUpdate(ctx, resGroup, namespaceName, eventHubName, name, parameters)
+	_, err := client.CreateOrUpdate(ctx, resourceGroup, namespaceName, eventHubName, name, parameters)
 	if err != nil {
 		return err
 	}
 
-	read, err := client.Get(ctx, resGroup, namespaceName, eventHubName, name)
+	read, err := client.Get(ctx, resourceGroup, namespaceName, eventHubName, name)
 
 	if err != nil {
 		return err
 	}
 
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read EventHub Consumer Group %s (resource group %s) ID", name, resGroup)
+		return fmt.Errorf("Cannot read EventHub Consumer Group %s (resource group %s) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -102,12 +102,12 @@ func resourceArmEventHubConsumerGroupRead(d *schema.ResourceData, meta interface
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	namespaceName := id.Path["namespaces"]
 	eventHubName := id.Path["eventhubs"]
 	name := id.Path["consumergroups"]
 
-	resp, err := client.Get(ctx, resGroup, namespaceName, eventHubName, name)
+	resp, err := client.Get(ctx, resourceGroup, namespaceName, eventHubName, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
@@ -119,7 +119,7 @@ func resourceArmEventHubConsumerGroupRead(d *schema.ResourceData, meta interface
 	d.Set("name", name)
 	d.Set("eventhub_name", eventHubName)
 	d.Set("namespace_name", namespaceName)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	d.Set("user_metadata", resp.ConsumerGroupProperties.UserMetadata)
 
 	return nil
@@ -133,12 +133,12 @@ func resourceArmEventHubConsumerGroupDelete(d *schema.ResourceData, meta interfa
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	namespaceName := id.Path["namespaces"]
 	eventHubName := id.Path["eventhubs"]
 	name := id.Path["consumergroups"]
 
-	resp, err := client.Delete(ctx, resGroup, namespaceName, eventHubName, name)
+	resp, err := client.Delete(ctx, resourceGroup, namespaceName, eventHubName, name)
 
 	if err != nil {
 		if !utils.ResponseWasNotFound(resp) {

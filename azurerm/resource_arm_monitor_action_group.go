@@ -114,7 +114,7 @@ func resourceArmMonitorActionGroupCreateOrUpdate(d *schema.ResourceData, meta in
 	ctx := meta.(*ArmClient).StopContext
 
 	name := d.Get("name").(string)
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 
 	shortName := d.Get("short_name").(string)
 	enabled := d.Get("enabled").(bool)
@@ -138,17 +138,17 @@ func resourceArmMonitorActionGroupCreateOrUpdate(d *schema.ResourceData, meta in
 		Tags: expandedTags,
 	}
 
-	_, err := client.CreateOrUpdate(ctx, resGroup, name, parameters)
+	_, err := client.CreateOrUpdate(ctx, resourceGroup, name, parameters)
 	if err != nil {
-		return fmt.Errorf("Error creating or updating action group %q (resource group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error creating or updating action group %q (resource group %q): %+v", name, resourceGroup, err)
 	}
 
-	read, err := client.Get(ctx, resGroup, name)
+	read, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
-		return fmt.Errorf("Error getting action group %q (resource group %q) after creation: %+v", name, resGroup, err)
+		return fmt.Errorf("Error getting action group %q (resource group %q) after creation: %+v", name, resourceGroup, err)
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Action group %q (resource group %q) ID is empty", name, resGroup)
+		return fmt.Errorf("Action group %q (resource group %q) ID is empty", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -164,20 +164,20 @@ func resourceArmMonitorActionGroupRead(d *schema.ResourceData, meta interface{})
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["actionGroups"]
 
-	resp, err := client.Get(ctx, resGroup, name)
+	resp, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
 		if response.WasNotFound(resp.Response.Response) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Error getting action group %q (resource group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error getting action group %q (resource group %q): %+v", name, resourceGroup, err)
 	}
 
 	d.Set("name", name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 
 	if group := resp.ActionGroup; group != nil {
 		d.Set("short_name", group.GroupShortName)
@@ -209,13 +209,13 @@ func resourceArmMonitorActionGroupDelete(d *schema.ResourceData, meta interface{
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["actionGroups"]
 
-	resp, err := client.Delete(ctx, resGroup, name)
+	resp, err := client.Delete(ctx, resourceGroup, name)
 	if err != nil {
 		if !response.WasNotFound(resp.Response) {
-			return fmt.Errorf("Error deleting action group %q (resource group %q): %+v", name, resGroup, err)
+			return fmt.Errorf("Error deleting action group %q (resource group %q): %+v", name, resourceGroup, err)
 		}
 	}
 

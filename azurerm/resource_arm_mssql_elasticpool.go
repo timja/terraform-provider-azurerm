@@ -263,7 +263,7 @@ func resourceArmMsSqlElasticPoolCreate(d *schema.ResourceData, meta interface{})
 	elasticPoolName := d.Get("name").(string)
 	serverName := d.Get("server_name").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	sku := expandAzureRmMsSqlElasticPoolSku(d)
 	tags := d.Get("tags").(map[string]interface{})
 
@@ -277,7 +277,7 @@ func resourceArmMsSqlElasticPoolCreate(d *schema.ResourceData, meta interface{})
 		},
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, serverName, elasticPoolName, elasticPool)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, serverName, elasticPoolName, elasticPool)
 	if err != nil {
 		return err
 	}
@@ -286,12 +286,12 @@ func resourceArmMsSqlElasticPoolCreate(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	read, err := client.Get(ctx, resGroup, serverName, elasticPoolName)
+	read, err := client.Get(ctx, resourceGroup, serverName, elasticPoolName)
 	if err != nil {
 		return err
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read MsSQL ElasticPool %q (resource group %q) ID", elasticPoolName, resGroup)
+		return fmt.Errorf("Cannot read MsSQL ElasticPool %q (resource group %q) ID", elasticPoolName, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -303,12 +303,12 @@ func resourceArmMsSqlElasticPoolRead(d *schema.ResourceData, meta interface{}) e
 	client := meta.(*ArmClient).msSqlElasticPoolsClient
 	ctx := meta.(*ArmClient).StopContext
 
-	resGroup, serverName, name, err := parseArmMsSqlElasticPoolId(d.Id())
+	resourceGroup, serverName, name, err := parseArmMsSqlElasticPoolId(d.Id())
 	if err != nil {
 		return err
 	}
 
-	resp, err := client.Get(ctx, resGroup, serverName, name)
+	resp, err := client.Get(ctx, resourceGroup, serverName, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
@@ -318,7 +318,7 @@ func resourceArmMsSqlElasticPoolRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.Set("name", resp.Name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 
 	if location := resp.Location; location != nil {
 		d.Set("location", azureRMNormalizeLocation(*location))
@@ -353,12 +353,12 @@ func resourceArmMsSqlElasticPoolDelete(d *schema.ResourceData, meta interface{})
 	client := meta.(*ArmClient).msSqlElasticPoolsClient
 	ctx := meta.(*ArmClient).StopContext
 
-	resGroup, serverName, name, err := parseArmSqlElasticPoolId(d.Id())
+	resourceGroup, serverName, name, err := parseArmSqlElasticPoolId(d.Id())
 	if err != nil {
 		return err
 	}
 
-	_, err = client.Delete(ctx, resGroup, serverName, name)
+	_, err = client.Delete(ctx, resourceGroup, serverName, name)
 	return err
 }
 

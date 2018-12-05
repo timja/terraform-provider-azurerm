@@ -60,7 +60,7 @@ func resourceArmCdnProfileCreate(d *schema.ResourceData, meta interface{}) error
 
 	name := d.Get("name").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	sku := d.Get("sku").(string)
 	tags := d.Get("tags").(map[string]interface{})
 
@@ -72,7 +72,7 @@ func resourceArmCdnProfileCreate(d *schema.ResourceData, meta interface{}) error
 		},
 	}
 
-	future, err := client.Create(ctx, resGroup, name, cdnProfile)
+	future, err := client.Create(ctx, resourceGroup, name, cdnProfile)
 	if err != nil {
 		return err
 	}
@@ -82,12 +82,12 @@ func resourceArmCdnProfileCreate(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	read, err := client.Get(ctx, resGroup, name)
+	read, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
 		return err
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read CDN Profile %s (resource group %s) ID", name, resGroup)
+		return fmt.Errorf("Cannot read CDN Profile %s (resource group %s) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)

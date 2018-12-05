@@ -85,7 +85,7 @@ func resourceArmVirtualMachineExtensionsCreate(d *schema.ResourceData, meta inte
 	name := d.Get("name").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
 	vmName := d.Get("virtual_machine_name").(string)
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	publisher := d.Get("publisher").(string)
 	extensionType := d.Get("type").(string)
 	typeHandlerVersion := d.Get("type_handler_version").(string)
@@ -119,7 +119,7 @@ func resourceArmVirtualMachineExtensionsCreate(d *schema.ResourceData, meta inte
 		extension.VirtualMachineExtensionProperties.ProtectedSettings = &protectedSettings
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, vmName, name, extension)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, vmName, name, extension)
 	if err != nil {
 		return err
 	}
@@ -129,13 +129,13 @@ func resourceArmVirtualMachineExtensionsCreate(d *schema.ResourceData, meta inte
 		return err
 	}
 
-	read, err := client.Get(ctx, resGroup, vmName, name, "")
+	read, err := client.Get(ctx, resourceGroup, vmName, name, "")
 	if err != nil {
 		return err
 	}
 
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read  Virtual Machine Extension %s (resource group %s) ID", name, resGroup)
+		return fmt.Errorf("Cannot read  Virtual Machine Extension %s (resource group %s) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -151,11 +151,11 @@ func resourceArmVirtualMachineExtensionsRead(d *schema.ResourceData, meta interf
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	vmName := id.Path["virtualMachines"]
 	name := id.Path["extensions"]
 
-	resp, err := client.Get(ctx, resGroup, vmName, name, "")
+	resp, err := client.Get(ctx, resourceGroup, vmName, name, "")
 
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
@@ -170,7 +170,7 @@ func resourceArmVirtualMachineExtensionsRead(d *schema.ResourceData, meta interf
 		d.Set("location", azureRMNormalizeLocation(*location))
 	}
 	d.Set("virtual_machine_name", vmName)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 
 	if props := resp.VirtualMachineExtensionProperties; props != nil {
 		d.Set("publisher", props.Publisher)
@@ -201,11 +201,11 @@ func resourceArmVirtualMachineExtensionsDelete(d *schema.ResourceData, meta inte
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["extensions"]
 	vmName := id.Path["virtualMachines"]
 
-	future, err := client.Delete(ctx, resGroup, vmName, name)
+	future, err := client.Delete(ctx, resourceGroup, vmName, name)
 	if err != nil {
 		return err
 	}

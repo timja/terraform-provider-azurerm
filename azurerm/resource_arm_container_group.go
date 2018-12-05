@@ -246,7 +246,7 @@ func resourceArmContainerGroupCreate(d *schema.ResourceData, meta interface{}) e
 	ctx := meta.(*ArmClient).StopContext
 	containerGroupsClient := meta.(*ArmClient).containerGroupsClient
 
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	name := d.Get("name").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
 	OSType := d.Get("os_type").(string)
@@ -276,18 +276,18 @@ func resourceArmContainerGroupCreate(d *schema.ResourceData, meta interface{}) e
 		containerGroup.ContainerGroupProperties.IPAddress.DNSNameLabel = &dnsNameLabel
 	}
 
-	_, err := containerGroupsClient.CreateOrUpdate(ctx, resGroup, name, containerGroup)
+	_, err := containerGroupsClient.CreateOrUpdate(ctx, resourceGroup, name, containerGroup)
 	if err != nil {
 		return err
 	}
 
-	read, err := containerGroupsClient.Get(ctx, resGroup, name)
+	read, err := containerGroupsClient.Get(ctx, resourceGroup, name)
 	if err != nil {
 		return err
 	}
 
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read container group %s (resource group %s) ID", name, resGroup)
+		return fmt.Errorf("Cannot read container group %s (resource group %s) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)

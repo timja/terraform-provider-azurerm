@@ -231,7 +231,7 @@ func resourceArmVirtualNetworkGatewayConnectionCreateUpdate(d *schema.ResourceDa
 
 	name := d.Get("name").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	tags := d.Get("tags").(map[string]interface{})
 
 	properties, err := getArmVirtualNetworkGatewayConnectionProperties(d)
@@ -246,21 +246,21 @@ func resourceArmVirtualNetworkGatewayConnectionCreateUpdate(d *schema.ResourceDa
 		VirtualNetworkGatewayConnectionPropertiesFormat: properties,
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, name, connection)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, name, connection)
 	if err != nil {
-		return fmt.Errorf("Error Creating/Updating AzureRM Virtual Network Gateway Connection %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error Creating/Updating AzureRM Virtual Network Gateway Connection %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	if err = future.WaitForCompletionRef(ctx, client.Client); err != nil {
-		return fmt.Errorf("Error waiting for completion of Virtual Network Gateway Connection %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error waiting for completion of Virtual Network Gateway Connection %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
-	read, err := client.Get(ctx, resGroup, name)
+	read, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
 		return err
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read AzureRM Virtual Network Gateway Connection %q (resource group %q) ID", name, resGroup)
+		return fmt.Errorf("Cannot read AzureRM Virtual Network Gateway Connection %q (resource group %q) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -272,12 +272,12 @@ func resourceArmVirtualNetworkGatewayConnectionRead(d *schema.ResourceData, meta
 	client := meta.(*ArmClient).vnetGatewayConnectionsClient
 	ctx := meta.(*ArmClient).StopContext
 
-	resGroup, name, err := resourceGroupAndVirtualNetworkGatewayConnectionFromId(d.Id())
+	resourceGroup, name, err := resourceGroupAndVirtualNetworkGatewayConnectionFromId(d.Id())
 	if err != nil {
 		return err
 	}
 
-	resp, err := client.Get(ctx, resGroup, name)
+	resp, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
@@ -289,7 +289,7 @@ func resourceArmVirtualNetworkGatewayConnectionRead(d *schema.ResourceData, meta
 	conn := *resp.VirtualNetworkGatewayConnectionPropertiesFormat
 
 	d.Set("name", resp.Name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	if location := resp.Location; location != nil {
 		d.Set("location", azureRMNormalizeLocation(*location))
 	}
@@ -351,18 +351,18 @@ func resourceArmVirtualNetworkGatewayConnectionDelete(d *schema.ResourceData, me
 	client := meta.(*ArmClient).vnetGatewayConnectionsClient
 	ctx := meta.(*ArmClient).StopContext
 
-	resGroup, name, err := resourceGroupAndVirtualNetworkGatewayConnectionFromId(d.Id())
+	resourceGroup, name, err := resourceGroupAndVirtualNetworkGatewayConnectionFromId(d.Id())
 	if err != nil {
 		return err
 	}
 
-	future, err := client.Delete(ctx, resGroup, name)
+	future, err := client.Delete(ctx, resourceGroup, name)
 	if err != nil {
-		return fmt.Errorf("Error Deleting Virtual Network Gateway Connection %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error Deleting Virtual Network Gateway Connection %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	if err = future.WaitForCompletionRef(ctx, client.Client); err != nil {
-		return fmt.Errorf("Error waiting for deletion of Virtual Network Gateway Connection %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error waiting for deletion of Virtual Network Gateway Connection %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	return nil
@@ -482,9 +482,9 @@ func resourceGroupAndVirtualNetworkGatewayConnectionFromId(virtualNetworkGateway
 		return "", "", err
 	}
 	name := id.Path["connections"]
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 
-	return resGroup, name, nil
+	return resourceGroup, name, nil
 }
 
 func expandArmVirtualNetworkGatewayConnectionIpsecPolicies(schemaIpsecPolicies []interface{}) *[]network.IpsecPolicy {

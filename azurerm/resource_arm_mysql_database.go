@@ -131,11 +131,11 @@ func resourceArmMySqlDatabaseDelete(d *schema.ResourceData, meta interface{}) er
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	serverName := id.Path["servers"]
 	name := id.Path["databases"]
 
-	future, err := client.Delete(ctx, resGroup, serverName, name)
+	future, err := client.Delete(ctx, resourceGroup, serverName, name)
 	if err != nil {
 		return err
 	}

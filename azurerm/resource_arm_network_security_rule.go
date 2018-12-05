@@ -158,7 +158,7 @@ func resourceArmNetworkSecurityRuleCreate(d *schema.ResourceData, meta interface
 
 	name := d.Get("name").(string)
 	nsgName := d.Get("network_security_group_name").(string)
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 
 	sourcePortRange := d.Get("source_port_range").(string)
 	destinationPortRange := d.Get("destination_port_range").(string)
@@ -253,22 +253,22 @@ func resourceArmNetworkSecurityRuleCreate(d *schema.ResourceData, meta interface
 		rule.DestinationApplicationSecurityGroups = &destinationApplicationSecurityGroups
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, nsgName, name, rule)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, nsgName, name, rule)
 	if err != nil {
-		return fmt.Errorf("Error Creating/Updating Network Security Rule %q (NSG %q / Resource Group %q): %+v", name, nsgName, resGroup, err)
+		return fmt.Errorf("Error Creating/Updating Network Security Rule %q (NSG %q / Resource Group %q): %+v", name, nsgName, resourceGroup, err)
 	}
 
 	err = future.WaitForCompletionRef(ctx, client.Client)
 	if err != nil {
-		return fmt.Errorf("Error waiting for completion of Network Security Rule %q (NSG %q / Resource Group %q): %+v", name, nsgName, resGroup, err)
+		return fmt.Errorf("Error waiting for completion of Network Security Rule %q (NSG %q / Resource Group %q): %+v", name, nsgName, resourceGroup, err)
 	}
 
-	read, err := client.Get(ctx, resGroup, nsgName, name)
+	read, err := client.Get(ctx, resourceGroup, nsgName, name)
 	if err != nil {
-		return fmt.Errorf("Error making Read request on Network Security Rule %q (NSG %q / Resource Group %q): %+v", name, nsgName, resGroup, err)
+		return fmt.Errorf("Error making Read request on Network Security Rule %q (NSG %q / Resource Group %q): %+v", name, nsgName, resourceGroup, err)
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read Network Security Rule %s (NSG %q / resource group %s) ID", name, nsgName, resGroup)
+		return fmt.Errorf("Cannot read Network Security Rule %s (NSG %q / resource group %s) ID", name, nsgName, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -284,21 +284,21 @@ func resourceArmNetworkSecurityRuleRead(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	networkSGName := id.Path["networkSecurityGroups"]
 	sgRuleName := id.Path["securityRules"]
 
-	resp, err := client.Get(ctx, resGroup, networkSGName, sgRuleName)
+	resp, err := client.Get(ctx, resourceGroup, networkSGName, sgRuleName)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Error making Read request on Network Security Rule %q (NSG %q / Resource Group %q): %+v", sgRuleName, networkSGName, resGroup, err)
+		return fmt.Errorf("Error making Read request on Network Security Rule %q (NSG %q / Resource Group %q): %+v", sgRuleName, networkSGName, resourceGroup, err)
 	}
 
 	d.Set("name", resp.Name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	d.Set("network_security_group_name", networkSGName)
 
 	if props := resp.SecurityRulePropertiesFormat; props != nil {
@@ -328,21 +328,21 @@ func resourceArmNetworkSecurityRuleDelete(d *schema.ResourceData, meta interface
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	nsgName := id.Path["networkSecurityGroups"]
 	sgRuleName := id.Path["securityRules"]
 
 	azureRMLockByName(nsgName, networkSecurityGroupResourceName)
 	defer azureRMUnlockByName(nsgName, networkSecurityGroupResourceName)
 
-	future, err := client.Delete(ctx, resGroup, nsgName, sgRuleName)
+	future, err := client.Delete(ctx, resourceGroup, nsgName, sgRuleName)
 	if err != nil {
-		return fmt.Errorf("Error Deleting Network Security Rule %q (NSG %q / Resource Group %q): %+v", sgRuleName, nsgName, resGroup, err)
+		return fmt.Errorf("Error Deleting Network Security Rule %q (NSG %q / Resource Group %q): %+v", sgRuleName, nsgName, resourceGroup, err)
 	}
 
 	err = future.WaitForCompletionRef(ctx, client.Client)
 	if err != nil {
-		return fmt.Errorf("Error waiting for the deletion of Network Security Rule %q (NSG %q / Resource Group %q): %+v", sgRuleName, nsgName, resGroup, err)
+		return fmt.Errorf("Error waiting for the deletion of Network Security Rule %q (NSG %q / Resource Group %q): %+v", sgRuleName, nsgName, resourceGroup, err)
 	}
 
 	return nil

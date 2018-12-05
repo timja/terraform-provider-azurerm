@@ -111,17 +111,17 @@ func resourceArmAppServiceCustomHostnameBindingDelete(d *schema.ResourceData, me
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	appServiceName := id.Path["sites"]
 	hostname := id.Path["hostNameBindings"]
 
 	azureRMLockByName(appServiceName, appServiceCustomHostnameBindingResourceName)
 	defer azureRMUnlockByName(appServiceName, appServiceCustomHostnameBindingResourceName)
 
-	log.Printf("[DEBUG] Deleting App Service Hostname Binding %q (App Service %q / Resource Group %q)", hostname, appServiceName, resGroup)
+	log.Printf("[DEBUG] Deleting App Service Hostname Binding %q (App Service %q / Resource Group %q)", hostname, appServiceName, resourceGroup)
 
 	ctx := meta.(*ArmClient).StopContext
-	resp, err := client.DeleteHostNameBinding(ctx, resGroup, appServiceName, hostname)
+	resp, err := client.DeleteHostNameBinding(ctx, resourceGroup, appServiceName, hostname)
 	if err != nil {
 		if !utils.ResponseWasNotFound(resp) {
 			return err

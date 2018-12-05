@@ -221,7 +221,7 @@ func resourceArmAutomationScheduleCreateUpdate(d *schema.ResourceData, meta inte
 	log.Printf("[INFO] preparing arguments for AzureRM Automation Schedule creation.")
 
 	name := d.Get("name").(string)
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	frequency := d.Get("frequency").(string)
 
 	timeZone := d.Get("timezone").(string)
@@ -277,18 +277,18 @@ func resourceArmAutomationScheduleCreateUpdate(d *schema.ResourceData, meta inte
 		properties.AdvancedSchedule = advancedRef
 	}
 
-	_, err := client.CreateOrUpdate(ctx, resGroup, accountName, name, parameters)
+	_, err := client.CreateOrUpdate(ctx, resourceGroup, accountName, name, parameters)
 	if err != nil {
 		return err
 	}
 
-	read, err := client.Get(ctx, resGroup, accountName, name)
+	read, err := client.Get(ctx, resourceGroup, accountName, name)
 	if err != nil {
 		return err
 	}
 
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read Automation Schedule '%s' (resource group %s) ID", name, resGroup)
+		return fmt.Errorf("Cannot read Automation Schedule '%s' (resource group %s) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -306,10 +306,10 @@ func resourceArmAutomationScheduleRead(d *schema.ResourceData, meta interface{})
 	}
 
 	name := id.Path["schedules"]
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	accountName := id.Path["automationAccounts"]
 
-	resp, err := client.Get(ctx, resGroup, accountName, name)
+	resp, err := client.Get(ctx, resourceGroup, accountName, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
@@ -320,7 +320,7 @@ func resourceArmAutomationScheduleRead(d *schema.ResourceData, meta interface{})
 	}
 
 	d.Set("name", resp.Name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	d.Set("automation_account_name", accountName)
 	d.Set("account_name", accountName) //todo remove once `account_name` is removed
 	d.Set("frequency", string(resp.Frequency))
@@ -366,10 +366,10 @@ func resourceArmAutomationScheduleDelete(d *schema.ResourceData, meta interface{
 	}
 
 	name := id.Path["schedules"]
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	accountName := id.Path["automationAccounts"]
 
-	resp, err := client.Delete(ctx, resGroup, accountName, name)
+	resp, err := client.Delete(ctx, resourceGroup, accountName, name)
 	if err != nil {
 		if !utils.ResponseWasNotFound(resp) {
 			return fmt.Errorf("Error issuing AzureRM delete request for Automation Schedule '%s': %+v", name, err)

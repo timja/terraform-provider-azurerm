@@ -61,7 +61,7 @@ func resourceArmAutomationCredentialCreateUpdate(d *schema.ResourceData, meta in
 	log.Printf("[INFO] preparing arguments for AzureRM Automation Credential creation.")
 
 	name := d.Get("name").(string)
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	accName := d.Get("account_name").(string)
 	user := d.Get("username").(string)
 	password := d.Get("password").(string)
@@ -76,18 +76,18 @@ func resourceArmAutomationCredentialCreateUpdate(d *schema.ResourceData, meta in
 		Name: &name,
 	}
 
-	_, err := client.CreateOrUpdate(ctx, resGroup, accName, name, parameters)
+	_, err := client.CreateOrUpdate(ctx, resourceGroup, accName, name, parameters)
 	if err != nil {
 		return err
 	}
 
-	read, err := client.Get(ctx, resGroup, accName, name)
+	read, err := client.Get(ctx, resourceGroup, accName, name)
 	if err != nil {
 		return err
 	}
 
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read Automation Credential '%s' (resource group %s) ID", name, resGroup)
+		return fmt.Errorf("Cannot read Automation Credential '%s' (resource group %s) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -103,11 +103,11 @@ func resourceArmAutomationCredentialRead(d *schema.ResourceData, meta interface{
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	accName := id.Path["automationAccounts"]
 	name := id.Path["credentials"]
 
-	resp, err := client.Get(ctx, resGroup, accName, name)
+	resp, err := client.Get(ctx, resourceGroup, accName, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
@@ -118,7 +118,7 @@ func resourceArmAutomationCredentialRead(d *schema.ResourceData, meta interface{
 	}
 
 	d.Set("name", resp.Name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	d.Set("account_name", accName)
 	if props := resp.CredentialProperties; props != nil {
 		d.Set("username", props.UserName)
@@ -136,11 +136,11 @@ func resourceArmAutomationCredentialDelete(d *schema.ResourceData, meta interfac
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	accName := id.Path["automationAccounts"]
 	name := id.Path["credentials"]
 
-	resp, err := client.Delete(ctx, resGroup, accName, name)
+	resp, err := client.Delete(ctx, resourceGroup, accName, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp) {
 			return nil

@@ -18,21 +18,21 @@ func resourceGroupAndLBNameFromId(loadBalancerId string) (string, string, error)
 		return "", "", err
 	}
 	name := id.Path["loadBalancers"]
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 
-	return resGroup, name, nil
+	return resourceGroup, name, nil
 }
 
 func retrieveLoadBalancerById(loadBalancerId string, meta interface{}) (*network.LoadBalancer, bool, error) {
 	client := meta.(*ArmClient).loadBalancerClient
 	ctx := meta.(*ArmClient).StopContext
 
-	resGroup, name, err := resourceGroupAndLBNameFromId(loadBalancerId)
+	resourceGroup, name, err := resourceGroupAndLBNameFromId(loadBalancerId)
 	if err != nil {
 		return nil, false, fmt.Errorf("Error Getting Load Balancer Name and Group:: %+v", err)
 	}
 
-	resp, err := client.Get(ctx, resGroup, name, "")
+	resp, err := client.Get(ctx, resourceGroup, name, "")
 	if err != nil {
 		if resp.StatusCode == http.StatusNotFound {
 			return nil, false, nil

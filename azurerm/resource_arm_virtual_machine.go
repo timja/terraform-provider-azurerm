@@ -561,7 +561,7 @@ func resourceArmVirtualMachineCreate(d *schema.ResourceData, meta interface{}) e
 
 	name := d.Get("name").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	tags := d.Get("tags").(map[string]interface{})
 	expandedTags := expandTags(tags)
 	zones := expandZones(d.Get("zones").([]interface{}))
@@ -654,7 +654,7 @@ func resourceArmVirtualMachineCreate(d *schema.ResourceData, meta interface{}) e
 	azureRMLockByName(name, virtualMachineResourceName)
 	defer azureRMUnlockByName(name, virtualMachineResourceName)
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, name, vm)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, name, vm)
 	if err != nil {
 		return err
 	}
@@ -663,19 +663,19 @@ func resourceArmVirtualMachineCreate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	read, err := client.Get(ctx, resGroup, name, "")
+	read, err := client.Get(ctx, resourceGroup, name, "")
 	if err != nil {
 		return err
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read Virtual Machine %s (resource group %s) ID", name, resGroup)
+		return fmt.Errorf("Cannot read Virtual Machine %s (resource group %s) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
 
 	ipAddress, err := determineVirtualMachineIPAddress(ctx, meta, read.VirtualMachineProperties)
 	if err != nil {
-		return fmt.Errorf("Error determining IP Address for Virtual Machine %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error determining IP Address for Virtual Machine %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	provisionerType := "ssh"
@@ -702,10 +702,10 @@ func resourceArmVirtualMachineRead(d *schema.ResourceData, meta interface{}) err
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["virtualMachines"]
 
-	resp, err := vmClient.Get(ctx, resGroup, name, "")
+	resp, err := vmClient.Get(ctx, resourceGroup, name, "")
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
@@ -715,7 +715,7 @@ func resourceArmVirtualMachineRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	d.Set("name", resp.Name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	d.Set("zones", resp.Zones)
 	if location := resp.Location; location != nil {
 		d.Set("location", azureRMNormalizeLocation(*location))
@@ -824,13 +824,13 @@ func resourceArmVirtualMachineDelete(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["virtualMachines"]
 
 	azureRMLockByName(name, virtualMachineResourceName)
 	defer azureRMUnlockByName(name, virtualMachineResourceName)
 
-	future, err := client.Delete(ctx, resGroup, name)
+	future, err := client.Delete(ctx, resourceGroup, name)
 	if err != nil {
 		return err
 	}
@@ -949,17 +949,17 @@ func resourceArmVirtualMachineDeleteManagedDisk(managedDiskID string, meta inter
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["disks"]
 
-	future, err := client.Delete(ctx, resGroup, name)
+	future, err := client.Delete(ctx, resourceGroup, name)
 	if err != nil {
-		return fmt.Errorf("Error deleting Managed Disk (%s %s) %+v", name, resGroup, err)
+		return fmt.Errorf("Error deleting Managed Disk (%s %s) %+v", name, resourceGroup, err)
 	}
 
 	err = future.WaitForCompletionRef(ctx, client.Client)
 	if err != nil {
-		return fmt.Errorf("Error deleting Managed Disk (%s %s) %+v", name, resGroup, err)
+		return fmt.Errorf("Error deleting Managed Disk (%s %s) %+v", name, resourceGroup, err)
 	}
 
 	return nil

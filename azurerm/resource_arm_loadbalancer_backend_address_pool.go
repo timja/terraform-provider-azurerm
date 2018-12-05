@@ -92,27 +92,27 @@ func resourceArmLoadBalancerBackendAddressPoolCreate(d *schema.ResourceData, met
 	}
 
 	loadBalancer.LoadBalancerPropertiesFormat.BackendAddressPools = &backendAddressPools
-	resGroup, loadBalancerName, err := resourceGroupAndLBNameFromId(d.Get("loadbalancer_id").(string))
+	resourceGroup, loadBalancerName, err := resourceGroupAndLBNameFromId(d.Get("loadbalancer_id").(string))
 	if err != nil {
 		return fmt.Errorf("Error parsing Load Balancer Name and Group: %+v", err)
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, loadBalancerName, *loadBalancer)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, loadBalancerName, *loadBalancer)
 	if err != nil {
-		return fmt.Errorf("Error Creating/Updating Load Balancer %q (Resource Group %q): %+v", loadBalancerName, resGroup, err)
+		return fmt.Errorf("Error Creating/Updating Load Balancer %q (Resource Group %q): %+v", loadBalancerName, resourceGroup, err)
 	}
 
 	err = future.WaitForCompletionRef(ctx, client.Client)
 	if err != nil {
-		return fmt.Errorf("Error Creating/Updating Load Balancer %q (Resource Group %q): %+v", loadBalancerName, resGroup, err)
+		return fmt.Errorf("Error Creating/Updating Load Balancer %q (Resource Group %q): %+v", loadBalancerName, resourceGroup, err)
 	}
 
-	read, err := client.Get(ctx, resGroup, loadBalancerName, "")
+	read, err := client.Get(ctx, resourceGroup, loadBalancerName, "")
 	if err != nil {
-		return fmt.Errorf("Error retrieving Load Balancer %q (Resource Group %q): %+v", loadBalancerName, resGroup, err)
+		return fmt.Errorf("Error retrieving Load Balancer %q (Resource Group %q): %+v", loadBalancerName, resourceGroup, err)
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read Load Balancer %q (Resource Group %q) ID", loadBalancerName, resGroup)
+		return fmt.Errorf("Cannot read Load Balancer %q (Resource Group %q) ID", loadBalancerName, resourceGroup)
 	}
 
 	var poolId string
@@ -133,11 +133,11 @@ func resourceArmLoadBalancerBackendAddressPoolCreate(d *schema.ResourceData, met
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"Accepted", "Updating"},
 		Target:  []string{"Succeeded"},
-		Refresh: loadbalancerStateRefreshFunc(ctx, client, resGroup, loadBalancerName),
+		Refresh: loadbalancerStateRefreshFunc(ctx, client, resourceGroup, loadBalancerName),
 		Timeout: 10 * time.Minute,
 	}
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("Error waiting for Load Balancer (%q Resource Group %q) to become available: %+v", loadBalancerName, resGroup, err)
+		return fmt.Errorf("Error waiting for Load Balancer (%q Resource Group %q) to become available: %+v", loadBalancerName, resourceGroup, err)
 	}
 
 	return resourceArmLoadBalancerBackendAddressPoolRead(d, meta)
@@ -219,12 +219,12 @@ func resourceArmLoadBalancerBackendAddressPoolDelete(d *schema.ResourceData, met
 	newBackEndPools := append(oldBackEndPools[:index], oldBackEndPools[index+1:]...)
 	loadBalancer.LoadBalancerPropertiesFormat.BackendAddressPools = &newBackEndPools
 
-	resGroup, loadBalancerName, err := resourceGroupAndLBNameFromId(d.Get("loadbalancer_id").(string))
+	resourceGroup, loadBalancerName, err := resourceGroupAndLBNameFromId(d.Get("loadbalancer_id").(string))
 	if err != nil {
 		return fmt.Errorf("Error Getting Load Balancer Name and Group:: %+v", err)
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, loadBalancerName, *loadBalancer)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, loadBalancerName, *loadBalancer)
 	if err != nil {
 		return fmt.Errorf("Error Creating/Updating LoadBalancer: %+v", err)
 	}
@@ -234,12 +234,12 @@ func resourceArmLoadBalancerBackendAddressPoolDelete(d *schema.ResourceData, met
 		return fmt.Errorf("Error waiting for the completion for the LoadBalancer: %+v", err)
 	}
 
-	read, err := client.Get(ctx, resGroup, loadBalancerName, "")
+	read, err := client.Get(ctx, resourceGroup, loadBalancerName, "")
 	if err != nil {
-		return fmt.Errorf("Error retrieving the Load Balancer %q (Resource Group %q): %+v", loadBalancerName, resGroup, err)
+		return fmt.Errorf("Error retrieving the Load Balancer %q (Resource Group %q): %+v", loadBalancerName, resourceGroup, err)
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read Load Balancer %q (resource group %q) ID", loadBalancerName, resGroup)
+		return fmt.Errorf("Cannot read Load Balancer %q (resource group %q) ID", loadBalancerName, resourceGroup)
 	}
 
 	return nil

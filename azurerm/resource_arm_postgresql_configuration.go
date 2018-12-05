@@ -50,7 +50,7 @@ func resourceArmPostgreSQLConfigurationCreateUpdate(d *schema.ResourceData, meta
 	log.Printf("[INFO] preparing arguments for AzureRM PostgreSQL Configuration creation.")
 
 	name := d.Get("name").(string)
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	serverName := d.Get("server_name").(string)
 
 	value := d.Get("value").(string)
@@ -61,7 +61,7 @@ func resourceArmPostgreSQLConfigurationCreateUpdate(d *schema.ResourceData, meta
 		},
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, serverName, name, properties)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, serverName, name, properties)
 	if err != nil {
 		return err
 	}
@@ -71,12 +71,12 @@ func resourceArmPostgreSQLConfigurationCreateUpdate(d *schema.ResourceData, meta
 		return err
 	}
 
-	read, err := client.Get(ctx, resGroup, serverName, name)
+	read, err := client.Get(ctx, resourceGroup, serverName, name)
 	if err != nil {
 		return err
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read PostgreSQL Configuration %s (resource group %s) ID", name, resGroup)
+		return fmt.Errorf("Cannot read PostgreSQL Configuration %s (resource group %s) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -92,14 +92,14 @@ func resourceArmPostgreSQLConfigurationRead(d *schema.ResourceData, meta interfa
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	serverName := id.Path["servers"]
 	name := id.Path["configurations"]
 
-	resp, err := client.Get(ctx, resGroup, serverName, name)
+	resp, err := client.Get(ctx, resourceGroup, serverName, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
-			log.Printf("[WARN] PostgreSQL Configuration '%s' was not found (resource group '%s')", name, resGroup)
+			log.Printf("[WARN] PostgreSQL Configuration '%s' was not found (resource group '%s')", name, resourceGroup)
 			d.SetId("")
 			return nil
 		}
@@ -109,7 +109,7 @@ func resourceArmPostgreSQLConfigurationRead(d *schema.ResourceData, meta interfa
 
 	d.Set("name", resp.Name)
 	d.Set("server_name", serverName)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	d.Set("value", resp.ConfigurationProperties.Value)
 
 	return nil
@@ -123,12 +123,12 @@ func resourceArmPostgreSQLConfigurationDelete(d *schema.ResourceData, meta inter
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	serverName := id.Path["servers"]
 	name := id.Path["configurations"]
 
 	// "delete" = resetting this to the default value
-	resp, err := client.Get(ctx, resGroup, serverName, name)
+	resp, err := client.Get(ctx, resourceGroup, serverName, name)
 	if err != nil {
 		return fmt.Errorf("Error retrieving Postgresql Configuration '%s': %+v", name, err)
 	}
@@ -140,7 +140,7 @@ func resourceArmPostgreSQLConfigurationDelete(d *schema.ResourceData, meta inter
 		},
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, serverName, name, properties)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, serverName, name, properties)
 	if err != nil {
 		if response.WasNotFound(future.Response()) {
 			return nil

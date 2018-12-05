@@ -20,12 +20,12 @@ func retrieveErcByResourceId(resourceId string, meta interface{}) (erc *network.
 	ercClient := meta.(*ArmClient).expressRouteCircuitClient
 	ctx := meta.(*ArmClient).StopContext
 
-	resGroup, name, err := extractResourceGroupAndErcName(resourceId)
+	resourceGroup, name, err := extractResourceGroupAndErcName(resourceId)
 	if err != nil {
 		return nil, "", fmt.Errorf("Error Parsing Azure Resource ID -: %+v", err)
 	}
 
-	resp, err := ercClient.Get(ctx, resGroup, name)
+	resp, err := ercClient.Get(ctx, resourceGroup, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			return nil, "", nil
@@ -33,5 +33,5 @@ func retrieveErcByResourceId(resourceId string, meta interface{}) (erc *network.
 		return nil, "", fmt.Errorf("Error making Read request on Express Route Circuit %s: %+v", name, err)
 	}
 
-	return &resp, resGroup, nil
+	return &resp, resourceGroup, nil
 }

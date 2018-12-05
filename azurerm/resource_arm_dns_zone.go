@@ -78,7 +78,7 @@ func resourceArmDnsZoneCreateUpdate(d *schema.ResourceData, meta interface{}) er
 	ctx := meta.(*ArmClient).StopContext
 
 	name := d.Get("name").(string)
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	location := "global"
 	zoneType := d.Get("zone_type").(string)
 	tags := d.Get("tags").(map[string]interface{})
@@ -98,13 +98,13 @@ func resourceArmDnsZoneCreateUpdate(d *schema.ResourceData, meta interface{}) er
 
 	etag := ""
 	ifNoneMatch := "" // set to empty to allow updates to records after creation
-	resp, err := client.CreateOrUpdate(ctx, resGroup, name, parameters, etag, ifNoneMatch)
+	resp, err := client.CreateOrUpdate(ctx, resourceGroup, name, parameters, etag, ifNoneMatch)
 	if err != nil {
 		return err
 	}
 
 	if resp.ID == nil {
-		return fmt.Errorf("Cannot read DNS zone %s (resource group %s) ID", name, resGroup)
+		return fmt.Errorf("Cannot read DNS zone %s (resource group %s) ID", name, resourceGroup)
 	}
 
 	d.SetId(*resp.ID)
@@ -121,20 +121,20 @@ func resourceArmDnsZoneRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["dnszones"]
 
-	resp, err := zonesClient.Get(ctx, resGroup, name)
+	resp, err := zonesClient.Get(ctx, resourceGroup, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Error reading DNS zone %s (resource group %s): %+v", name, resGroup, err)
+		return fmt.Errorf("Error reading DNS zone %s (resource group %s): %+v", name, resourceGroup, err)
 	}
 
 	d.Set("name", name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	d.Set("number_of_record_sets", resp.NumberOfRecordSets)
 	d.Set("max_number_of_record_sets", resp.MaxNumberOfRecordSets)
 	d.Set("zone_type", resp.ZoneType)
@@ -171,16 +171,16 @@ func resourceArmDnsZoneDelete(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["dnszones"]
 
 	etag := ""
-	future, err := client.Delete(ctx, resGroup, name, etag)
+	future, err := client.Delete(ctx, resourceGroup, name, etag)
 	if err != nil {
 		if response.WasNotFound(future.Response()) {
 			return nil
 		}
-		return fmt.Errorf("Error deleting DNS zone %s (resource group %s): %+v", name, resGroup, err)
+		return fmt.Errorf("Error deleting DNS zone %s (resource group %s): %+v", name, resourceGroup, err)
 	}
 
 	err = future.WaitForCompletionRef(ctx, client.Client)
@@ -188,7 +188,7 @@ func resourceArmDnsZoneDelete(d *schema.ResourceData, meta interface{}) error {
 		if response.WasNotFound(future.Response()) {
 			return nil
 		}
-		return fmt.Errorf("Error deleting DNS zone %s (resource group %s): %+v", name, resGroup, err)
+		return fmt.Errorf("Error deleting DNS zone %s (resource group %s): %+v", name, resourceGroup, err)
 	}
 
 	return nil

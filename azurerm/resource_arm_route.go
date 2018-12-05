@@ -72,7 +72,7 @@ func resourceArmRouteCreateUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	name := d.Get("name").(string)
 	rtName := d.Get("route_table_name").(string)
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 
 	addressPrefix := d.Get("address_prefix").(string)
 	nextHopType := d.Get("next_hop_type").(string)
@@ -92,21 +92,21 @@ func resourceArmRouteCreateUpdate(d *schema.ResourceData, meta interface{}) erro
 		route.RoutePropertiesFormat.NextHopIPAddress = utils.String(v.(string))
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, rtName, name, route)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, rtName, name, route)
 	if err != nil {
-		return fmt.Errorf("Error Creating/Updating Route %q (Route Table %q / Resource Group %q): %+v", name, rtName, resGroup, err)
+		return fmt.Errorf("Error Creating/Updating Route %q (Route Table %q / Resource Group %q): %+v", name, rtName, resourceGroup, err)
 	}
 
 	if err = future.WaitForCompletionRef(ctx, client.Client); err != nil {
-		return fmt.Errorf("Error waiting for completion for Route %q (Route Table %q / Resource Group %q): %+v", name, rtName, resGroup, err)
+		return fmt.Errorf("Error waiting for completion for Route %q (Route Table %q / Resource Group %q): %+v", name, rtName, resourceGroup, err)
 	}
 
-	read, err := client.Get(ctx, resGroup, rtName, name)
+	read, err := client.Get(ctx, resourceGroup, rtName, name)
 	if err != nil {
 		return err
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read Route %q/%q (resource group %q) ID", rtName, name, resGroup)
+		return fmt.Errorf("Cannot read Route %q/%q (resource group %q) ID", rtName, name, resourceGroup)
 	}
 	d.SetId(*read.ID)
 
@@ -121,11 +121,11 @@ func resourceArmRouteRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	rtName := id.Path["routeTables"]
 	routeName := id.Path["routes"]
 
-	resp, err := client.Get(ctx, resGroup, rtName, routeName)
+	resp, err := client.Get(ctx, resourceGroup, rtName, routeName)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
@@ -135,7 +135,7 @@ func resourceArmRouteRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("name", routeName)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	d.Set("route_table_name", rtName)
 
 	if props := resp.RoutePropertiesFormat; props != nil {
@@ -155,21 +155,21 @@ func resourceArmRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	rtName := id.Path["routeTables"]
 	routeName := id.Path["routes"]
 
 	azureRMLockByName(rtName, routeTableResourceName)
 	defer azureRMUnlockByName(rtName, routeTableResourceName)
 
-	future, err := client.Delete(ctx, resGroup, rtName, routeName)
+	future, err := client.Delete(ctx, resourceGroup, rtName, routeName)
 	if err != nil {
-		return fmt.Errorf("Error deleting Route %q (Route Table %q / Resource Group %q): %+v", routeName, rtName, resGroup, err)
+		return fmt.Errorf("Error deleting Route %q (Route Table %q / Resource Group %q): %+v", routeName, rtName, resourceGroup, err)
 	}
 
 	err = future.WaitForCompletionRef(ctx, client.Client)
 	if err != nil {
-		return fmt.Errorf("Error waiting for deletion of Route %q (Route Table %q / Resource Group %q): %+v", routeName, rtName, resGroup, err)
+		return fmt.Errorf("Error waiting for deletion of Route %q (Route Table %q / Resource Group %q): %+v", routeName, rtName, resourceGroup, err)
 	}
 
 	return nil

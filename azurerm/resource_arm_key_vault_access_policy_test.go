@@ -124,17 +124,17 @@ func testCheckAzureRMKeyVaultAccessPolicyExists(name string) resource.TestCheckF
 		}
 
 		vaultName := rs.Primary.Attributes["vault_name"]
-		resGroup := rs.Primary.Attributes["resource_group_name"]
+		resourceGroup := rs.Primary.Attributes["resource_group_name"]
 		objectId := rs.Primary.Attributes["object_id"]
 		applicationId := rs.Primary.Attributes["application_id"]
 
 		client := testAccProvider.Meta().(*ArmClient).keyVaultClient
 		ctx := testAccProvider.Meta().(*ArmClient).StopContext
 
-		resp, err := client.Get(ctx, resGroup, vaultName)
+		resp, err := client.Get(ctx, resourceGroup, vaultName)
 		if err != nil {
 			if utils.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Bad: Key Vault %q (resource group: %q) does not exist", vaultName, resGroup)
+				return fmt.Errorf("Bad: Key Vault %q (resource group: %q) does not exist", vaultName, resourceGroup)
 			}
 
 			return fmt.Errorf("Bad: Get on keyVaultClient: %+v", err)
@@ -145,7 +145,7 @@ func testCheckAzureRMKeyVaultAccessPolicyExists(name string) resource.TestCheckF
 			return fmt.Errorf("Error finding Key Vault Access Policy %q : %+v", vaultName, err)
 		}
 		if policy == nil {
-			return fmt.Errorf("Bad: Key Vault Policy %q (resource group: %q, object_id: %s) does not exist", vaultName, resGroup, objectId)
+			return fmt.Errorf("Bad: Key Vault Policy %q (resource group: %q, object_id: %s) does not exist", vaultName, resourceGroup, objectId)
 		}
 
 		return nil

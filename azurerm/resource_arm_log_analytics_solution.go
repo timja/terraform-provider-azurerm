@@ -94,7 +94,7 @@ func resourceArmLogAnalyticsSolutionCreateUpdate(d *schema.ResourceData, meta in
 	solutionPlan.Name = &name
 
 	location := azureRMNormalizeLocation(d.Get("location").(string))
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	workspaceID := d.Get("workspace_resource_id").(string)
 
 	parameters := operationsmanagement.Solution{
@@ -106,23 +106,23 @@ func resourceArmLogAnalyticsSolutionCreateUpdate(d *schema.ResourceData, meta in
 		},
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, name, parameters)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, name, parameters)
 	if err != nil {
-		return fmt.Errorf("Error creating/updating Log Analytics Solution %q (Workspace %q / Resource Group %q): %+v", name, workspaceID, resGroup, err)
+		return fmt.Errorf("Error creating/updating Log Analytics Solution %q (Workspace %q / Resource Group %q): %+v", name, workspaceID, resourceGroup, err)
 	}
 
 	err = future.WaitForCompletionRef(ctx, client.Client)
 	if err != nil {
-		return fmt.Errorf("Error waiting for the create/update of Log Analytics Solution %q (Workspace %q / Resource Group %q): %+v", name, workspaceID, resGroup, err)
+		return fmt.Errorf("Error waiting for the create/update of Log Analytics Solution %q (Workspace %q / Resource Group %q): %+v", name, workspaceID, resourceGroup, err)
 	}
 
-	solution, err := client.Get(ctx, resGroup, name)
+	solution, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
-		return fmt.Errorf("Error retrieving Log Analytics Solution %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error retrieving Log Analytics Solution %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	if solution.ID == nil {
-		return fmt.Errorf("Cannot read Log Analytics Solution %q (Resource Group %q) ID", name, resGroup)
+		return fmt.Errorf("Cannot read Log Analytics Solution %q (Resource Group %q) ID", name, resourceGroup)
 	}
 
 	d.SetId(*solution.ID)
@@ -138,10 +138,10 @@ func resourceArmLogAnalyticsSolutionRead(d *schema.ResourceData, meta interface{
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["solutions"]
 
-	resp, err := client.Get(ctx, resGroup, name)
+	resp, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
@@ -154,7 +154,7 @@ func resourceArmLogAnalyticsSolutionRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("Error making Read request on AzureRM Log Analytics solutions '%s': Plan was nil", name)
 	}
 
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	if location := resp.Location; location != nil {
 		d.Set("location", azureRMNormalizeLocation(*location))
 	}
@@ -192,18 +192,18 @@ func resourceArmLogAnalyticsSolutionDelete(d *schema.ResourceData, meta interfac
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["solutions"]
 
-	future, err := client.Delete(ctx, resGroup, name)
+	future, err := client.Delete(ctx, resourceGroup, name)
 	if err != nil {
-		return fmt.Errorf("Error deleting Log Analytics Solution %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error deleting Log Analytics Solution %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	err = future.WaitForCompletionRef(ctx, client.Client)
 	if err != nil {
 		if !response.WasNotFound(future.Response()) {
-			return fmt.Errorf("Error waiting for deletion of Log Analytics Solution %q (Resource Group %q): %+v", name, resGroup, err)
+			return fmt.Errorf("Error waiting for deletion of Log Analytics Solution %q (Resource Group %q): %+v", name, resourceGroup, err)
 		}
 	}
 

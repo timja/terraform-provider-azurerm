@@ -229,7 +229,7 @@ func resourceArmFunctionAppCreate(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("The name %q used for the Function App needs to be globally unique and isn't available: %s", name, *available.Message)
 	}
 
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
 	kind := "functionapp"
 	appServicePlanID := d.Get("app_service_plan_id").(string)
@@ -266,7 +266,7 @@ func resourceArmFunctionAppCreate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	createFuture, err := client.CreateOrUpdate(ctx, resGroup, name, siteEnvelope)
+	createFuture, err := client.CreateOrUpdate(ctx, resourceGroup, name, siteEnvelope)
 	if err != nil {
 		return err
 	}
@@ -276,12 +276,12 @@ func resourceArmFunctionAppCreate(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	read, err := client.Get(ctx, resGroup, name)
+	read, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
 		return err
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read Function App %s (resource group %s) ID", name, resGroup)
+		return fmt.Errorf("Cannot read Function App %s (resource group %s) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -298,7 +298,7 @@ func resourceArmFunctionAppUpdate(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["sites"]
 
 	location := azureRMNormalizeLocation(d.Get("location").(string))
@@ -337,7 +337,7 @@ func resourceArmFunctionAppUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, name, siteEnvelope)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, name, siteEnvelope)
 	if err != nil {
 		return err
 	}
@@ -352,7 +352,7 @@ func resourceArmFunctionAppUpdate(d *schema.ResourceData, meta interface{}) erro
 		Properties: appSettings,
 	}
 
-	_, err = client.UpdateApplicationSettings(ctx, resGroup, name, settings)
+	_, err = client.UpdateApplicationSettings(ctx, resourceGroup, name, settings)
 	if err != nil {
 		return fmt.Errorf("Error updating Application Settings for Function App %q: %+v", name, err)
 	}
@@ -362,7 +362,7 @@ func resourceArmFunctionAppUpdate(d *schema.ResourceData, meta interface{}) erro
 		siteConfigResource := web.SiteConfigResource{
 			SiteConfig: &siteConfig,
 		}
-		_, err := client.CreateOrUpdateConfiguration(ctx, resGroup, name, siteConfigResource)
+		_, err := client.CreateOrUpdateConfiguration(ctx, resourceGroup, name, siteConfigResource)
 		if err != nil {
 			return fmt.Errorf("Error updating Configuration for Function App %q: %+v", name, err)
 		}
@@ -375,7 +375,7 @@ func resourceArmFunctionAppUpdate(d *schema.ResourceData, meta interface{}) erro
 			Properties: connectionStrings,
 		}
 
-		_, err := client.UpdateConnectionStrings(ctx, resGroup, name, properties)
+		_, err := client.UpdateConnectionStrings(ctx, resourceGroup, name, properties)
 		if err != nil {
 			return fmt.Errorf("Error updating Connection Strings for App Service %q: %+v", name, err)
 		}
@@ -393,35 +393,35 @@ func resourceArmFunctionAppRead(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["sites"]
 
-	resp, err := client.Get(ctx, resGroup, name)
+	resp, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
-			log.Printf("[DEBUG] Function App %q (resource group %q) was not found - removing from state", name, resGroup)
+			log.Printf("[DEBUG] Function App %q (resource group %q) was not found - removing from state", name, resourceGroup)
 			d.SetId("")
 			return nil
 		}
 		return fmt.Errorf("Error making Read request on AzureRM Function App %q: %+v", name, err)
 	}
 
-	appSettingsResp, err := client.ListApplicationSettings(ctx, resGroup, name)
+	appSettingsResp, err := client.ListApplicationSettings(ctx, resourceGroup, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(appSettingsResp.Response) {
-			log.Printf("[DEBUG] Application Settings of Function App %q (resource group %q) were not found", name, resGroup)
+			log.Printf("[DEBUG] Application Settings of Function App %q (resource group %q) were not found", name, resourceGroup)
 			d.SetId("")
 			return nil
 		}
 		return fmt.Errorf("Error making Read request on AzureRM Function App AppSettings %q: %+v", name, err)
 	}
 
-	connectionStringsResp, err := client.ListConnectionStrings(ctx, resGroup, name)
+	connectionStringsResp, err := client.ListConnectionStrings(ctx, resourceGroup, name)
 	if err != nil {
 		return fmt.Errorf("Error making Read request on AzureRM Function App ConnectionStrings %q: %+v", name, err)
 	}
 
-	siteCredFuture, err := client.ListPublishingCredentials(ctx, resGroup, name)
+	siteCredFuture, err := client.ListPublishingCredentials(ctx, resourceGroup, name)
 	if err != nil {
 		return err
 	}
@@ -435,7 +435,7 @@ func resourceArmFunctionAppRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	d.Set("name", name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	if location := resp.Location; location != nil {
 		d.Set("location", azureRMNormalizeLocation(*location))
 	}
@@ -474,7 +474,7 @@ func resourceArmFunctionAppRead(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	configResp, err := client.GetConfiguration(ctx, resGroup, name)
+	configResp, err := client.GetConfiguration(ctx, resourceGroup, name)
 	if err != nil {
 		return fmt.Errorf("Error making Read request on AzureRM Function App Configuration %q: %+v", name, err)
 	}
@@ -501,15 +501,15 @@ func resourceArmFunctionAppDelete(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["sites"]
 
-	log.Printf("[DEBUG] Deleting Function App %q (resource group %q)", name, resGroup)
+	log.Printf("[DEBUG] Deleting Function App %q (resource group %q)", name, resourceGroup)
 
 	deleteMetrics := true
 	deleteEmptyServerFarm := false
 	ctx := meta.(*ArmClient).StopContext
-	resp, err := client.Delete(ctx, resGroup, name, &deleteMetrics, &deleteEmptyServerFarm)
+	resp, err := client.Delete(ctx, resourceGroup, name, &deleteMetrics, &deleteEmptyServerFarm)
 	if err != nil {
 		if !utils.ResponseWasNotFound(resp) {
 			return err

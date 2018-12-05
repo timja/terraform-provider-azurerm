@@ -45,21 +45,21 @@ func testCheckAzureRMDevSpaceControllerExists(name string) resource.TestCheckFun
 		}
 
 		ctrlName := rs.Primary.Attributes["name"]
-		resGroupName, hasReseGroup := rs.Primary.Attributes["resource_group_name"]
+		resourceGroupName, hasReseGroup := rs.Primary.Attributes["resource_group_name"]
 		if !hasReseGroup {
 			return fmt.Errorf("Bad: no resource group found in state for DevSpace Controller: %s", ctrlName)
 		}
 
 		client := testAccProvider.Meta().(*ArmClient).devSpaceControllerClient
 		ctx := testAccProvider.Meta().(*ArmClient).StopContext
-		result, err := client.Get(ctx, resGroupName, ctrlName)
+		result, err := client.Get(ctx, resourceGroupName, ctrlName)
 
 		if err == nil {
 			return nil
 		}
 
 		if result.StatusCode == http.StatusNotFound {
-			return fmt.Errorf("Bad: DevSpace Controller %q (Resource Group: %q) does not exist", ctrlName, resGroupName)
+			return fmt.Errorf("Bad: DevSpace Controller %q (Resource Group: %q) does not exist", ctrlName, resourceGroupName)
 		}
 
 		return fmt.Errorf("Bad: Get devSpaceControllerClient: %+v", err)
@@ -78,9 +78,9 @@ func testCheckAzureRMDevSpaceControllerDestroy(s *terraform.State) error {
 		log.Printf("[WARN] azurerm_devspace_controller still exists in state file.")
 
 		ctrlName := rs.Primary.Attributes["name"]
-		resGroupName := rs.Primary.Attributes["resource_group_name"]
+		resourceGroupName := rs.Primary.Attributes["resource_group_name"]
 
-		result, err := client.Get(ctx, resGroupName, ctrlName)
+		result, err := client.Get(ctx, resourceGroupName, ctrlName)
 
 		if err == nil {
 			return fmt.Errorf("DevSpace Controller still exists:\n%#v", result)

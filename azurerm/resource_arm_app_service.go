@@ -201,7 +201,7 @@ func resourceArmAppServiceCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("The name %q used for the App Service needs to be globally unique and isn't available: %s", name, *available.Message)
 	}
 
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
 	appServicePlanId := d.Get("app_service_plan_id").(string)
 	enabled := d.Get("enabled").(bool)
@@ -231,7 +231,7 @@ func resourceArmAppServiceCreate(d *schema.ResourceData, meta interface{}) error
 		siteEnvelope.SiteProperties.ClientAffinityEnabled = utils.Bool(enabled)
 	}
 
-	createFuture, err := client.CreateOrUpdate(ctx, resGroup, name, siteEnvelope)
+	createFuture, err := client.CreateOrUpdate(ctx, resourceGroup, name, siteEnvelope)
 	if err != nil {
 		return err
 	}
@@ -241,12 +241,12 @@ func resourceArmAppServiceCreate(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	read, err := client.Get(ctx, resGroup, name)
+	read, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
 		return err
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read App Service %q (resource group %q) ID", name, resGroup)
+		return fmt.Errorf("Cannot read App Service %q (resource group %q) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -263,7 +263,7 @@ func resourceArmAppServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["sites"]
 
 	location := azureRMNormalizeLocation(d.Get("location").(string))
@@ -284,7 +284,7 @@ func resourceArmAppServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		},
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, name, siteEnvelope)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, name, siteEnvelope)
 	if err != nil {
 		return err
 	}
@@ -300,7 +300,7 @@ func resourceArmAppServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		siteConfigResource := web.SiteConfigResource{
 			SiteConfig: &siteConfig,
 		}
-		_, err := client.CreateOrUpdateConfiguration(ctx, resGroup, name, siteConfigResource)
+		_, err := client.CreateOrUpdateConfiguration(ctx, resourceGroup, name, siteConfigResource)
 		if err != nil {
 			return fmt.Errorf("Error updating Configuration for App Service %q: %+v", name, err)
 		}
@@ -317,7 +317,7 @@ func resourceArmAppServiceUpdate(d *schema.ResourceData, meta interface{}) error
 			},
 		}
 
-		_, err := client.Update(ctx, resGroup, name, sitePatchResource)
+		_, err := client.Update(ctx, resourceGroup, name, sitePatchResource)
 		if err != nil {
 			return fmt.Errorf("Error updating App Service ARR Affinity setting %q: %+v", name, err)
 		}
@@ -330,7 +330,7 @@ func resourceArmAppServiceUpdate(d *schema.ResourceData, meta interface{}) error
 			Properties: appSettings,
 		}
 
-		_, err := client.UpdateApplicationSettings(ctx, resGroup, name, settings)
+		_, err := client.UpdateApplicationSettings(ctx, resourceGroup, name, settings)
 		if err != nil {
 			return fmt.Errorf("Error updating Application Settings for App Service %q: %+v", name, err)
 		}
@@ -343,14 +343,14 @@ func resourceArmAppServiceUpdate(d *schema.ResourceData, meta interface{}) error
 			Properties: connectionStrings,
 		}
 
-		_, err := client.UpdateConnectionStrings(ctx, resGroup, name, properties)
+		_, err := client.UpdateConnectionStrings(ctx, resourceGroup, name, properties)
 		if err != nil {
 			return fmt.Errorf("Error updating Connection Strings for App Service %q: %+v", name, err)
 		}
 	}
 
 	if d.HasChange("identity") {
-		site, err := client.Get(ctx, resGroup, name)
+		site, err := client.Get(ctx, resourceGroup, name)
 		if err != nil {
 			return fmt.Errorf("Error getting configuration for App Service %q: %+v", name, err)
 		}
@@ -358,7 +358,7 @@ func resourceArmAppServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		appServiceIdentity := expandAzureRmAppServiceIdentity(d)
 		site.Identity = appServiceIdentity
 
-		future, err := client.CreateOrUpdate(ctx, resGroup, name, site)
+		future, err := client.CreateOrUpdate(ctx, resourceGroup, name, site)
 
 		if err != nil {
 			return fmt.Errorf("Error updating Managed Service Identity for App Service %q: %+v", name, err)
@@ -382,41 +382,41 @@ func resourceArmAppServiceRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["sites"]
 
 	ctx := meta.(*ArmClient).StopContext
-	resp, err := client.Get(ctx, resGroup, name)
+	resp, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
-			log.Printf("[DEBUG] App Service %q (resource group %q) was not found - removing from state", name, resGroup)
+			log.Printf("[DEBUG] App Service %q (resource group %q) was not found - removing from state", name, resourceGroup)
 			d.SetId("")
 			return nil
 		}
 		return fmt.Errorf("Error making Read request on AzureRM App Service %q: %+v", name, err)
 	}
 
-	configResp, err := client.GetConfiguration(ctx, resGroup, name)
+	configResp, err := client.GetConfiguration(ctx, resourceGroup, name)
 	if err != nil {
 		return fmt.Errorf("Error making Read request on AzureRM App Service Configuration %q: %+v", name, err)
 	}
 
-	appSettingsResp, err := client.ListApplicationSettings(ctx, resGroup, name)
+	appSettingsResp, err := client.ListApplicationSettings(ctx, resourceGroup, name)
 	if err != nil {
 		return fmt.Errorf("Error making Read request on AzureRM App Service AppSettings %q: %+v", name, err)
 	}
 
-	connectionStringsResp, err := client.ListConnectionStrings(ctx, resGroup, name)
+	connectionStringsResp, err := client.ListConnectionStrings(ctx, resourceGroup, name)
 	if err != nil {
 		return fmt.Errorf("Error making Read request on AzureRM App Service ConnectionStrings %q: %+v", name, err)
 	}
 
-	scmResp, err := client.GetSourceControl(ctx, resGroup, name)
+	scmResp, err := client.GetSourceControl(ctx, resourceGroup, name)
 	if err != nil {
 		return fmt.Errorf("Error making Read request on AzureRM App Service Source Control %q: %+v", name, err)
 	}
 
-	siteCredFuture, err := client.ListPublishingCredentials(ctx, resGroup, name)
+	siteCredFuture, err := client.ListPublishingCredentials(ctx, resourceGroup, name)
 	if err != nil {
 		return err
 	}
@@ -430,7 +430,7 @@ func resourceArmAppServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("name", name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	if location := resp.Location; location != nil {
 		d.Set("location", azureRMNormalizeLocation(*location))
 	}
@@ -484,15 +484,15 @@ func resourceArmAppServiceDelete(d *schema.ResourceData, meta interface{}) error
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["sites"]
 
-	log.Printf("[DEBUG] Deleting App Service %q (resource group %q)", name, resGroup)
+	log.Printf("[DEBUG] Deleting App Service %q (resource group %q)", name, resourceGroup)
 
 	deleteMetrics := true
 	deleteEmptyServerFarm := false
 	ctx := meta.(*ArmClient).StopContext
-	resp, err := client.Delete(ctx, resGroup, name, &deleteMetrics, &deleteEmptyServerFarm)
+	resp, err := client.Delete(ctx, resourceGroup, name, &deleteMetrics, &deleteEmptyServerFarm)
 	if err != nil {
 		if !utils.ResponseWasNotFound(resp) {
 			return err

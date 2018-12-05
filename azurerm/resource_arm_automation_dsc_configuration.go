@@ -77,7 +77,7 @@ func resourceArmAutomationDscConfigurationCreateUpdate(d *schema.ResourceData, m
 	log.Printf("[INFO] preparing arguments for AzureRM Automation Dsc Configuration creation.")
 
 	name := d.Get("name").(string)
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	accName := d.Get("automation_account_name").(string)
 	contentEmbedded := d.Get("content_embedded").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
@@ -96,18 +96,18 @@ func resourceArmAutomationDscConfigurationCreateUpdate(d *schema.ResourceData, m
 		Location: utils.String(location),
 	}
 
-	_, err := client.CreateOrUpdate(ctx, resGroup, accName, name, parameters)
+	_, err := client.CreateOrUpdate(ctx, resourceGroup, accName, name, parameters)
 	if err != nil {
 		return err
 	}
 
-	read, err := client.Get(ctx, resGroup, accName, name)
+	read, err := client.Get(ctx, resourceGroup, accName, name)
 	if err != nil {
 		return err
 	}
 
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read Automation Dsc Configuration %q (resource group %q) ID", name, resGroup)
+		return fmt.Errorf("Cannot read Automation Dsc Configuration %q (resource group %q) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -123,11 +123,11 @@ func resourceArmAutomationDscConfigurationRead(d *schema.ResourceData, meta inte
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	accName := id.Path["automationAccounts"]
 	name := id.Path["configurations"]
 
-	resp, err := client.Get(ctx, resGroup, accName, name)
+	resp, err := client.Get(ctx, resourceGroup, accName, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
@@ -138,7 +138,7 @@ func resourceArmAutomationDscConfigurationRead(d *schema.ResourceData, meta inte
 	}
 
 	d.Set("name", resp.Name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	d.Set("automation_account_name", accName)
 
 	if location := resp.Location; location != nil {
@@ -151,7 +151,7 @@ func resourceArmAutomationDscConfigurationRead(d *schema.ResourceData, meta inte
 		d.Set("state", resp.State)
 	}
 
-	contentresp, err := client.GetContent(ctx, resGroup, accName, name)
+	contentresp, err := client.GetContent(ctx, resourceGroup, accName, name)
 	if err != nil {
 		return fmt.Errorf("Error making Read request on AzureRM Automation Dsc Configuration content %q: %+v", name, err)
 	}
@@ -175,11 +175,11 @@ func resourceArmAutomationDscConfigurationDelete(d *schema.ResourceData, meta in
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	accName := id.Path["automationAccounts"]
 	name := id.Path["configurations"]
 
-	resp, err := client.Delete(ctx, resGroup, accName, name)
+	resp, err := client.Delete(ctx, resourceGroup, accName, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp) {
 			return nil

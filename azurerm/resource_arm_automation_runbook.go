@@ -126,7 +126,7 @@ func resourceArmAutomationRunbookCreateUpdate(d *schema.ResourceData, meta inter
 
 	name := d.Get("name").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	tags := d.Get("tags").(map[string]interface{})
 
 	accName := d.Get("account_name").(string)
@@ -150,33 +150,33 @@ func resourceArmAutomationRunbookCreateUpdate(d *schema.ResourceData, meta inter
 		Tags:     expandTags(tags),
 	}
 
-	_, err := client.CreateOrUpdate(ctx, resGroup, accName, name, parameters)
+	_, err := client.CreateOrUpdate(ctx, resourceGroup, accName, name, parameters)
 	if err != nil {
-		return fmt.Errorf("Error creating/updating Automation Runbook %q (Account %q / Resource Group %q): %+v", name, accName, resGroup, err)
+		return fmt.Errorf("Error creating/updating Automation Runbook %q (Account %q / Resource Group %q): %+v", name, accName, resourceGroup, err)
 	}
 
 	if v, ok := d.GetOk("content"); ok {
 		content := v.(string)
 		reader := ioutil.NopCloser(bytes.NewBufferString(content))
 		draftClient := meta.(*ArmClient).automationRunbookDraftClient
-		_, err = draftClient.ReplaceContent(ctx, resGroup, accName, name, reader)
+		_, err = draftClient.ReplaceContent(ctx, resourceGroup, accName, name, reader)
 		if err != nil {
-			return fmt.Errorf("Error setting the draft Automation Runbook %q (Account %q / Resource Group %q): %+v", name, accName, resGroup, err)
+			return fmt.Errorf("Error setting the draft Automation Runbook %q (Account %q / Resource Group %q): %+v", name, accName, resourceGroup, err)
 		}
 
-		_, err = draftClient.Publish(ctx, resGroup, accName, name)
+		_, err = draftClient.Publish(ctx, resourceGroup, accName, name)
 		if err != nil {
-			return fmt.Errorf("Error publishing the updated Automation Runbook %q (Account %q / Resource Group %q): %+v", name, accName, resGroup, err)
+			return fmt.Errorf("Error publishing the updated Automation Runbook %q (Account %q / Resource Group %q): %+v", name, accName, resourceGroup, err)
 		}
 	}
 
-	read, err := client.Get(ctx, resGroup, accName, name)
+	read, err := client.Get(ctx, resourceGroup, accName, name)
 	if err != nil {
-		return fmt.Errorf("Error retrieving Automation Runbook %q (Account %q / Resource Group %q): %+v", name, accName, resGroup, err)
+		return fmt.Errorf("Error retrieving Automation Runbook %q (Account %q / Resource Group %q): %+v", name, accName, resourceGroup, err)
 	}
 
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read Automation Runbook %q (Account %q / Resource Group %q) ID", name, accName, resGroup)
+		return fmt.Errorf("Cannot read Automation Runbook %q (Account %q / Resource Group %q) ID", name, accName, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -192,22 +192,22 @@ func resourceArmAutomationRunbookRead(d *schema.ResourceData, meta interface{}) 
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	accName := id.Path["automationAccounts"]
 	name := id.Path["runbooks"]
 
-	resp, err := client.Get(ctx, resGroup, accName, name)
+	resp, err := client.Get(ctx, resourceGroup, accName, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
 			return nil
 		}
 
-		return fmt.Errorf("Error making Read request on AzureRM Automation Runbook %q (Account %q / Resource Group %q): %+v", name, accName, resGroup, err)
+		return fmt.Errorf("Error making Read request on AzureRM Automation Runbook %q (Account %q / Resource Group %q): %+v", name, accName, resourceGroup, err)
 	}
 
 	d.Set("name", resp.Name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	if location := resp.Location; location != nil {
 		d.Set("location", azureRMNormalizeLocation(*location))
 	}
@@ -224,9 +224,9 @@ func resourceArmAutomationRunbookRead(d *schema.ResourceData, meta interface{}) 
 		flattenAndSetTags(d, tags)
 	}
 
-	response, err := client.GetContent(ctx, resGroup, accName, name)
+	response, err := client.GetContent(ctx, resourceGroup, accName, name)
 	if err != nil {
-		return fmt.Errorf("Error retrieving content for Automation Runbook %q (Account %q / Resource Group %q): %+v", name, accName, resGroup, err)
+		return fmt.Errorf("Error retrieving content for Automation Runbook %q (Account %q / Resource Group %q): %+v", name, accName, resourceGroup, err)
 	}
 
 	if v := response.Value; v != nil {
@@ -251,11 +251,11 @@ func resourceArmAutomationRunbookDelete(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	accName := id.Path["automationAccounts"]
 	name := id.Path["runbooks"]
 
-	resp, err := client.Delete(ctx, resGroup, accName, name)
+	resp, err := client.Delete(ctx, resourceGroup, accName, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp) {
 			return nil

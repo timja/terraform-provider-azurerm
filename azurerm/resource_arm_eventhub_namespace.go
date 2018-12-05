@@ -109,7 +109,7 @@ func resourceArmEventHubNamespaceCreate(d *schema.ResourceData, meta interface{}
 
 	name := d.Get("name").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	sku := d.Get("sku").(string)
 	capacity := int32(d.Get("capacity").(int))
 	tags := d.Get("tags").(map[string]interface{})
@@ -133,7 +133,7 @@ func resourceArmEventHubNamespaceCreate(d *schema.ResourceData, meta interface{}
 		parameters.EHNamespaceProperties.MaximumThroughputUnits = utils.Int32(int32(v.(int)))
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, name, parameters)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, name, parameters)
 	if err != nil {
 		return err
 	}
@@ -142,13 +142,13 @@ func resourceArmEventHubNamespaceCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("Error creating eventhub namespace: %+v", err)
 	}
 
-	read, err := client.Get(ctx, resGroup, name)
+	read, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
 		return err
 	}
 
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read EventHub Namespace %q (resource group %q) ID", name, resGroup)
+		return fmt.Errorf("Cannot read EventHub Namespace %q (resource group %q) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -164,10 +164,10 @@ func resourceArmEventHubNamespaceRead(d *schema.ResourceData, meta interface{}) 
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["namespaces"]
 
-	resp, err := client.Get(ctx, resGroup, name)
+	resp, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
@@ -177,7 +177,7 @@ func resourceArmEventHubNamespaceRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	d.Set("name", resp.Name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	if location := resp.Location; location != nil {
 		d.Set("location", azureRMNormalizeLocation(*location))
 	}
@@ -185,7 +185,7 @@ func resourceArmEventHubNamespaceRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("sku", string(resp.Sku.Name))
 	d.Set("capacity", resp.Sku.Capacity)
 
-	keys, err := client.ListKeys(ctx, resGroup, name, eventHubNamespaceDefaultAuthorizationRule)
+	keys, err := client.ListKeys(ctx, resourceGroup, name, eventHubNamespaceDefaultAuthorizationRule)
 	if err != nil {
 		log.Printf("[WARN] Unable to List default keys for EventHub Namespace %q: %+v", name, err)
 	} else {
@@ -213,18 +213,18 @@ func resourceArmEventHubNamespaceDelete(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["namespaces"]
 
-	future, err := client.Delete(ctx, resGroup, name)
+	future, err := client.Delete(ctx, resourceGroup, name)
 	if err != nil {
 		if response.WasNotFound(future.Response()) {
 			return nil
 		}
-		return fmt.Errorf("Error issuing delete request of EventHub Namespace %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error issuing delete request of EventHub Namespace %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
-	return waitForEventHubNamespaceToBeDeleted(ctx, client, resGroup, name)
+	return waitForEventHubNamespaceToBeDeleted(ctx, client, resourceGroup, name)
 }
 
 func waitForEventHubNamespaceToBeDeleted(ctx context.Context, client eventhub.NamespacesClient, resourceGroup, name string) error {

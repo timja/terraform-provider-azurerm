@@ -56,7 +56,7 @@ func resourceArmPostgreSQLFirewallRuleCreate(d *schema.ResourceData, meta interf
 	log.Printf("[INFO] preparing arguments for AzureRM PostgreSQL Firewall Rule creation.")
 
 	name := d.Get("name").(string)
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	serverName := d.Get("server_name").(string)
 	startIPAddress := d.Get("start_ip_address").(string)
 	endIPAddress := d.Get("end_ip_address").(string)
@@ -68,7 +68,7 @@ func resourceArmPostgreSQLFirewallRuleCreate(d *schema.ResourceData, meta interf
 		},
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, serverName, name, properties)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, serverName, name, properties)
 	if err != nil {
 		return err
 	}
@@ -78,12 +78,12 @@ func resourceArmPostgreSQLFirewallRuleCreate(d *schema.ResourceData, meta interf
 		return err
 	}
 
-	read, err := client.Get(ctx, resGroup, serverName, name)
+	read, err := client.Get(ctx, resourceGroup, serverName, name)
 	if err != nil {
 		return err
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read PostgreSQL Firewall Rule %s (resource group %s) ID", name, resGroup)
+		return fmt.Errorf("Cannot read PostgreSQL Firewall Rule %s (resource group %s) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -99,14 +99,14 @@ func resourceArmPostgreSQLFirewallRuleRead(d *schema.ResourceData, meta interfac
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	serverName := id.Path["servers"]
 	name := id.Path["firewallRules"]
 
-	resp, err := client.Get(ctx, resGroup, serverName, name)
+	resp, err := client.Get(ctx, resourceGroup, serverName, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
-			log.Printf("[WARN] PostgreSQL Firewall Rule '%s' was not found (resource group '%s')", name, resGroup)
+			log.Printf("[WARN] PostgreSQL Firewall Rule '%s' was not found (resource group '%s')", name, resourceGroup)
 			d.SetId("")
 			return nil
 		}
@@ -115,7 +115,7 @@ func resourceArmPostgreSQLFirewallRuleRead(d *schema.ResourceData, meta interfac
 	}
 
 	d.Set("name", resp.Name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	d.Set("server_name", serverName)
 	d.Set("start_ip_address", resp.StartIPAddress)
 	d.Set("end_ip_address", resp.EndIPAddress)
@@ -131,11 +131,11 @@ func resourceArmPostgreSQLFirewallRuleDelete(d *schema.ResourceData, meta interf
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	serverName := id.Path["servers"]
 	name := id.Path["firewallRules"]
 
-	future, err := client.Delete(ctx, resGroup, serverName, name)
+	future, err := client.Delete(ctx, resourceGroup, serverName, name)
 	if err != nil {
 		if response.WasNotFound(future.Response()) {
 			return nil

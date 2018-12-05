@@ -122,7 +122,7 @@ func resourceArmTrafficManagerProfileCreate(d *schema.ResourceData, meta interfa
 	name := d.Get("name").(string)
 	// must be provided in request
 	location := "global"
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	tags := d.Get("tags").(map[string]interface{})
 
 	profile := trafficmanager.Profile{
@@ -133,17 +133,17 @@ func resourceArmTrafficManagerProfileCreate(d *schema.ResourceData, meta interfa
 	}
 
 	ctx := meta.(*ArmClient).StopContext
-	_, err := client.CreateOrUpdate(ctx, resGroup, name, profile)
+	_, err := client.CreateOrUpdate(ctx, resourceGroup, name, profile)
 	if err != nil {
 		return err
 	}
 
-	read, err := client.Get(ctx, resGroup, name)
+	read, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
 		return err
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read TrafficManager profile %s (resource group %s) ID", name, resGroup)
+		return fmt.Errorf("Cannot read TrafficManager profile %s (resource group %s) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -159,10 +159,10 @@ func resourceArmTrafficManagerProfileRead(d *schema.ResourceData, meta interface
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["trafficManagerProfiles"]
 
-	resp, err := client.Get(ctx, resGroup, name)
+	resp, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
@@ -174,7 +174,7 @@ func resourceArmTrafficManagerProfileRead(d *schema.ResourceData, meta interface
 	profile := *resp.ProfileProperties
 
 	// update appropriate values
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	d.Set("name", resp.Name)
 	d.Set("profile_status", profile.ProfileStatus)
 	d.Set("traffic_routing_method", profile.TrafficRoutingMethod)
@@ -200,11 +200,11 @@ func resourceArmTrafficManagerProfileDelete(d *schema.ResourceData, meta interfa
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["trafficManagerProfiles"]
 
 	ctx := meta.(*ArmClient).StopContext
-	resp, err := client.Delete(ctx, resGroup, name)
+	resp, err := client.Delete(ctx, resourceGroup, name)
 	if err != nil {
 		if !utils.ResponseWasNotFound(resp.Response) {
 			return err

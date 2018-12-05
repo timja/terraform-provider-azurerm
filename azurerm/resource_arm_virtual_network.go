@@ -99,7 +99,7 @@ func resourceArmVirtualNetworkCreate(d *schema.ResourceData, meta interface{}) e
 
 	name := d.Get("name").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
-	resGroup := d.Get("resource_group_name").(string)
+	resourceGroup := d.Get("resource_group_name").(string)
 	tags := d.Get("tags").(map[string]interface{})
 	vnetProperties, vnetPropsErr := expandVirtualNetworkProperties(ctx, d, meta)
 	if vnetPropsErr != nil {
@@ -130,22 +130,22 @@ func resourceArmVirtualNetworkCreate(d *schema.ResourceData, meta interface{}) e
 	azureRMLockMultipleByName(&networkSecurityGroupNames, networkSecurityGroupResourceName)
 	defer azureRMUnlockMultipleByName(&networkSecurityGroupNames, networkSecurityGroupResourceName)
 
-	future, err := client.CreateOrUpdate(ctx, resGroup, name, vnet)
+	future, err := client.CreateOrUpdate(ctx, resourceGroup, name, vnet)
 	if err != nil {
-		return fmt.Errorf("Error Creating/Updating Virtual Network %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error Creating/Updating Virtual Network %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	err = future.WaitForCompletionRef(ctx, client.Client)
 	if err != nil {
-		return fmt.Errorf("Error waiting for completion of Virtual Network %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error waiting for completion of Virtual Network %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
-	read, err := client.Get(ctx, resGroup, name, "")
+	read, err := client.Get(ctx, resourceGroup, name, "")
 	if err != nil {
 		return err
 	}
 	if read.ID == nil {
-		return fmt.Errorf("Cannot read Virtual Network %q (resource group %q) ID", name, resGroup)
+		return fmt.Errorf("Cannot read Virtual Network %q (resource group %q) ID", name, resourceGroup)
 	}
 
 	d.SetId(*read.ID)
@@ -161,20 +161,20 @@ func resourceArmVirtualNetworkRead(d *schema.ResourceData, meta interface{}) err
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["virtualNetworks"]
 
-	resp, err := client.Get(ctx, resGroup, name, "")
+	resp, err := client.Get(ctx, resourceGroup, name, "")
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Error making Read request on Virtual Network %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error making Read request on Virtual Network %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	d.Set("name", resp.Name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	if location := resp.Location; location != nil {
 		d.Set("location", azureRMNormalizeLocation(*location))
 	}
@@ -209,7 +209,7 @@ func resourceArmVirtualNetworkDelete(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return err
 	}
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	name := id.Path["virtualNetworks"]
 
 	nsgNames, err := expandAzureRmVirtualNetworkVirtualNetworkSecurityGroupNames(d)
@@ -220,14 +220,14 @@ func resourceArmVirtualNetworkDelete(d *schema.ResourceData, meta interface{}) e
 	azureRMLockMultipleByName(&nsgNames, virtualNetworkResourceName)
 	defer azureRMUnlockMultipleByName(&nsgNames, virtualNetworkResourceName)
 
-	future, err := client.Delete(ctx, resGroup, name)
+	future, err := client.Delete(ctx, resourceGroup, name)
 	if err != nil {
-		return fmt.Errorf("Error deleting Virtual Network %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error deleting Virtual Network %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	err = future.WaitForCompletionRef(ctx, client.Client)
 	if err != nil {
-		return fmt.Errorf("Error waiting for deletion of Virtual Network %q (Resource Group %q): %+v", name, resGroup, err)
+		return fmt.Errorf("Error waiting for deletion of Virtual Network %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	return nil
@@ -243,9 +243,9 @@ func expandVirtualNetworkProperties(ctx context.Context, d *schema.ResourceData,
 			log.Printf("[INFO] setting subnets inside vNet, processing %q", name)
 			//since subnets can also be created outside of vNet definition (as root objects)
 			// do a GET on subnet properties from the server before setting them
-			resGroup := d.Get("resource_group_name").(string)
+			resourceGroup := d.Get("resource_group_name").(string)
 			vnetName := d.Get("name").(string)
-			subnetObj, err := getExistingSubnet(ctx, resGroup, vnetName, name, meta)
+			subnetObj, err := getExistingSubnet(ctx, resourceGroup, vnetName, name, meta)
 			if err != nil {
 				return nil, err
 			}
@@ -348,11 +348,11 @@ func resourceAzureSubnetHash(v interface{}) int {
 	return hashcode.String(buf.String())
 }
 
-func getExistingSubnet(ctx context.Context, resGroup string, vnetName string, subnetName string, meta interface{}) (*network.Subnet, error) {
+func getExistingSubnet(ctx context.Context, resourceGroup string, vnetName string, subnetName string, meta interface{}) (*network.Subnet, error) {
 	//attempt to retrieve existing subnet from the server
 	existingSubnet := network.Subnet{}
 	subnetClient := meta.(*ArmClient).subnetClient
-	resp, err := subnetClient.Get(ctx, resGroup, vnetName, subnetName, "")
+	resp, err := subnetClient.Get(ctx, resourceGroup, vnetName, subnetName, "")
 
 	if err != nil {
 		if resp.StatusCode == http.StatusNotFound {

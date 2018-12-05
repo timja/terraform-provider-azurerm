@@ -95,23 +95,23 @@ func resourceArmServiceBusQueueAuthorizationRuleRead(d *schema.ResourceData, met
 		return err
 	}
 
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	namespaceName := id.Path["namespaces"]
 	name := id.Path["authorizationRules"]
 	queueName := id.Path["queues"]
 
-	resp, err := client.GetAuthorizationRule(ctx, resGroup, namespaceName, queueName, name)
+	resp, err := client.GetAuthorizationRule(ctx, resourceGroup, namespaceName, queueName, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			d.SetId("")
 			return nil
 		}
 
-		return fmt.Errorf("Error making Read request on Azure ServiceBus Queue Authorization Rule %q (Queue %q / Namespace %q / Resource Group %q): %+v", name, queueName, namespaceName, resGroup, err)
+		return fmt.Errorf("Error making Read request on Azure ServiceBus Queue Authorization Rule %q (Queue %q / Namespace %q / Resource Group %q): %+v", name, queueName, namespaceName, resourceGroup, err)
 	}
 
 	d.Set("name", name)
-	d.Set("resource_group_name", resGroup)
+	d.Set("resource_group_name", resourceGroup)
 	d.Set("namespace_name", namespaceName)
 	d.Set("queue_name", queueName)
 
@@ -122,7 +122,7 @@ func resourceArmServiceBusQueueAuthorizationRuleRead(d *schema.ResourceData, met
 		d.Set("send", send)
 	}
 
-	keysResp, err := client.ListKeys(ctx, resGroup, namespaceName, queueName, name)
+	keysResp, err := client.ListKeys(ctx, resourceGroup, namespaceName, queueName, name)
 	if err != nil {
 		return fmt.Errorf("Error making Read request on Azure ServiceBus Queue Authorization Rule List Keys %q: %+v", name, err)
 	}
@@ -144,13 +144,13 @@ func resourceArmServiceBusQueueAuthorizationRuleDelete(d *schema.ResourceData, m
 		return err
 	}
 
-	resGroup := id.ResourceGroup
+	resourceGroup := id.ResourceGroup
 	namespaceName := id.Path["namespaces"]
 	name := id.Path["authorizationRules"]
 	queueName := id.Path["queues"]
 
-	if _, err = client.DeleteAuthorizationRule(ctx, resGroup, namespaceName, queueName, name); err != nil {
-		return fmt.Errorf("Error issuing delete request of ServiceBus Queue Authorization Rule %q (Queue %q / Namespace %q / Resource Group %q): %+v", name, queueName, namespaceName, resGroup, err)
+	if _, err = client.DeleteAuthorizationRule(ctx, resourceGroup, namespaceName, queueName, name); err != nil {
+		return fmt.Errorf("Error issuing delete request of ServiceBus Queue Authorization Rule %q (Queue %q / Namespace %q / Resource Group %q): %+v", name, queueName, namespaceName, resourceGroup, err)
 	}
 
 	return nil
