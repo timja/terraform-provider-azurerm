@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Azure/azure-sdk-for-go/services/web/mgmt/2020-12-01/web"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/locks"
@@ -111,14 +110,14 @@ func resourceAppServiceSlotVirtualNetworkSwiftConnectionCreateUpdate(d *pluginsd
 		return fmt.Errorf("Error retrieving existing App Service Slot %q (App Service %q / Resource Group %q): %s", slotName, name, resourceGroup, err)
 	}
 
-	connectionEnvelope := web.SwiftVirtualNetwork{
-		SwiftVirtualNetworkProperties: &web.SwiftVirtualNetworkProperties{
-			SubnetResourceID: utils.String(d.Get("subnet_id").(string)),
-		},
-	}
-	if _, err = client.CreateOrUpdateSwiftVirtualNetworkConnectionSlot(ctx, resourceGroup, name, connectionEnvelope, slotName); err != nil {
-		return fmt.Errorf("Error creating/updating App Service Slot VNet association between %q (App Service %q / Resource Group %q) and Virtual Network %q: %s", slotName, name, resourceGroup, virtualNetworkName, err)
-	}
+	//connectionEnvelope := web.SwiftVirtualNetwork{
+	//	SwiftVirtualNetworkProperties: &web.SwiftVirtualNetworkProperties{
+	//		SubnetResourceID: utils.String(d.Get("subnet_id").(string)),
+	//	},
+	//}
+	//if _, err = client.CreateOrUpdateSwiftVirtualNetworkConnectionSlot(ctx, resourceGroup, name, connectionEnvelope, slotName); err != nil {
+	//	return fmt.Errorf("Error creating/updating App Service Slot VNet association between %q (App Service %q / Resource Group %q) and Virtual Network %q: %s", slotName, name, resourceGroup, virtualNetworkName, err)
+	//}
 
 	read, err := client.GetSwiftVirtualNetworkConnectionSlot(ctx, resourceGroup, name, slotName)
 	if err != nil {
