@@ -115,8 +115,13 @@ func resourceStaticSiteCreateOrUpdate(d *pluginsdk.ResourceData, meta interface{
 		Tags:       tags.Expand(d.Get("tags").(map[string]interface{})),
 	}
 
-	if _, err := client.CreateOrUpdateStaticSite(ctx, id.ResourceGroup, id.Name, siteEnvelope); err != nil {
+	future, err := client.CreateOrUpdateStaticSite(ctx, id.ResourceGroup, id.Name, siteEnvelope)
+	if err != nil {
 		return fmt.Errorf("failed creating %s: %+v", id, err)
+	}
+
+	if err = future.WaitForCompletionRef(ctx, client.Client); err != nil {
+		return fmt.Errorf("error waiting for creation of Static Site %q (Resource Group %q): %+v", id.Name, id.ResourceGroup, err)
 	}
 
 	d.SetId(id.ID())
